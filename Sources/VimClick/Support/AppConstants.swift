@@ -4,9 +4,9 @@ enum AppConstants {
     static let minimumSystemVersion = "13.0"
 
     // Developer configuration. These values are intentionally not user settings.
-    static let gridRows = Array("abcdefghijkl")
+    static let gridRows = Array("abcdefghijklmnopq")
     static let gridColumns = Array("abcdefghijklmnopqrstuvwxyz")
-    static let maxZoomDepth = 3
+    static let maxZoomDepth = 1
 
     static let overlayBackgroundOpacity = 0.10
     static let gridLineOpacity = 0.24

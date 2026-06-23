@@ -95,6 +95,8 @@ final class OverlayController {
             zoomIntoSelection()
             return true
         case .typeCharacter(let character):
+            guard zoom.allowsDirectSelection else { return true }
+
             if selection.handleCharacter(character, coordinateSystem: coordinateSystem) {
                 updateGridView()
             }

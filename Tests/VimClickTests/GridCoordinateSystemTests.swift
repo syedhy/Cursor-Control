@@ -6,17 +6,24 @@ struct GridCoordinateSystemTests {
     private let coordinateSystem = GridCoordinateSystem()
 
     @Test func defaultGridUsesConfiguredDimensionsAndIdentifiers() {
-        #expect(coordinateSystem.rowCount == 12)
+        #expect(coordinateSystem.rowCount == 17)
         #expect(coordinateSystem.columnCount == 26)
         #expect(coordinateSystem.identifier(for: .first) == "aa")
-        #expect(coordinateSystem.identifier(for: GridCoordinate(row: 11, column: 25)) == "lz")
+        #expect(coordinateSystem.identifier(for: GridCoordinate(row: 16, column: 25)) == "qz")
     }
 
     @Test func cellGeometryUsesTheSameCenterAsRendering() {
-        let bounds = NSRect(x: 0, y: 0, width: 260, height: 120)
+        let bounds = NSRect(x: 0, y: 0, width: 260, height: 170)
         let coordinate = GridCoordinate(row: 2, column: 10)
 
         #expect(coordinateSystem.cellFrame(for: coordinate, in: bounds) == NSRect(x: 100, y: 20, width: 10, height: 10))
         #expect(coordinateSystem.center(of: coordinate, in: bounds) == NSPoint(x: 105, y: 25))
+    }
+
+    @Test func configuredGridProducesNearSquareCellsOnTheCapturedDisplay() {
+        let capturedDisplayBounds = NSRect(x: 0, y: 0, width: 1976, height: 1280)
+        let cellSize = coordinateSystem.cellSize(in: capturedDisplayBounds)
+
+        #expect(abs(cellSize.width - cellSize.height) < 1)
     }
 }

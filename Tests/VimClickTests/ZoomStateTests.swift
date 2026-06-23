@@ -4,7 +4,7 @@ import Testing
 
 struct ZoomStateTests {
     private let coordinateSystem = GridCoordinateSystem()
-    private let bounds = NSRect(x: 0, y: 0, width: 260, height: 120)
+    private let bounds = NSRect(x: 0, y: 0, width: 260, height: 170)
 
     @Test func zoomPathProducesAnExactNestedActiveRegion() {
         var zoom = ZoomState()
@@ -21,15 +21,7 @@ struct ZoomStateTests {
             width: 10,
             height: 10
         ))
-
-        let secondZoomSucceeded = zoom.zoom(into: .first, coordinateSystem: coordinateSystem)
-        #expect(secondZoomSucceeded)
-        #expect(zoom.activeRegion(in: bounds, coordinateSystem: coordinateSystem) == NSRect(
-            x: 100,
-            y: 20,
-            width: 10.0 / 26.0,
-            height: 10.0 / 12.0
-        ))
+        #expect(!zoom.allowsDirectSelection)
     }
 
     @Test func maxDepthIsEnforcedAndFurtherZoomIsIgnored() {
@@ -54,6 +46,7 @@ struct ZoomStateTests {
         zoom.reset()
 
         #expect(zoom.depth == 0)
+        #expect(zoom.allowsDirectSelection)
         #expect(zoom.activeRegion(in: bounds, coordinateSystem: coordinateSystem) == bounds)
     }
 }

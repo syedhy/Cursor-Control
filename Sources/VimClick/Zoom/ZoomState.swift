@@ -4,6 +4,7 @@ struct ZoomState: Equatable {
     private(set) var path: [GridCoordinate] = []
 
     var depth: Int { path.count }
+    var allowsDirectSelection: Bool { depth == 0 }
 
     mutating func reset() {
         path.removeAll(keepingCapacity: true)

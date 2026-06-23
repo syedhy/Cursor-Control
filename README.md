@@ -76,9 +76,10 @@ The selection begins at `aa`. Use **Control-H**, **Control-J**, **Control-K**,
 and **Control-L** to move left, down, up, and right. Movement stops at grid
 boundaries and supports normal macOS key repeat.
 
-Press **Space** to zoom into the selected cell. VimClick draws the same grid
-inside that cell and resets selection to `aa`. Zooming is manual and stops at
-the developer-configured maximum depth.
+Press **Space** once to zoom into the selected cell. VimClick draws the same
+grid inside that cell and resets selection to `aa`. In this precision view,
+direct cell identifiers and further zooming are disabled; use only
+**Control-H/J/K/L** to position the center point before clicking.
 
 The planned default activation shortcut is **Command-Shift-Space**.
 

@@ -58,7 +58,7 @@ struct SelectionStateTests {
         for _ in 0..<20 {
             selection.move(rowDelta: 1, columnDelta: 0, coordinateSystem: coordinateSystem)
         }
-        #expect(selection.coordinate == GridCoordinate(row: 11, column: 25))
+        #expect(selection.coordinate == GridCoordinate(row: 16, column: 25))
         let movedPastBottom = selection.move(rowDelta: 1, columnDelta: 0, coordinateSystem: coordinateSystem)
         let movedPastRight = selection.move(rowDelta: 0, columnDelta: 1, coordinateSystem: coordinateSystem)
         #expect(!movedPastBottom)
