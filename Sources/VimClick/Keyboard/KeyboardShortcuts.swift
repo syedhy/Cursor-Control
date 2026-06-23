@@ -7,12 +7,14 @@ enum OverlayKeyboardCommand: Equatable {
     case moveUp
     case moveRight
     case zoom
+    case click
     case typeCharacter(Character)
 }
 
 enum KeyboardShortcuts {
     static let cancelKeyCode: UInt16 = 53
     static let zoomKeyCode: UInt16 = 49
+    static let clickKeyCodes: Set<UInt16> = [36, 76]
     static let moveLeftCharacter: Character = "h"
     static let moveDownCharacter: Character = "j"
     static let moveUpCharacter: Character = "k"
@@ -21,6 +23,10 @@ enum KeyboardShortcuts {
     static func command(for event: NSEvent) -> OverlayKeyboardCommand? {
         if event.keyCode == cancelKeyCode {
             return .cancel
+        }
+
+        if clickKeyCodes.contains(event.keyCode) {
+            return .click
         }
 
         let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)

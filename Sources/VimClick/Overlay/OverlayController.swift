@@ -2,6 +2,7 @@ import AppKit
 
 @MainActor
 final class OverlayController {
+    private let onClick: @MainActor (ClickTarget) -> Void
     private let screenProvider: CursorScreenProvider
     private let keyboardMonitor: OverlayKeyboardMonitor
     private let coordinateSystem: GridCoordinateSystem
@@ -13,10 +14,12 @@ final class OverlayController {
     private var presentationPending = false
 
     init(
+        onClick: @escaping @MainActor (ClickTarget) -> Void = { _ in },
         screenProvider: CursorScreenProvider = CursorScreenProvider(),
         keyboardMonitor: OverlayKeyboardMonitor = OverlayKeyboardMonitor(),
         coordinateSystem: GridCoordinateSystem = GridCoordinateSystem()
     ) {
+        self.onClick = onClick
         self.screenProvider = screenProvider
         self.keyboardMonitor = keyboardMonitor
         self.coordinateSystem = coordinateSystem
@@ -94,6 +97,9 @@ final class OverlayController {
         case .zoom:
             zoomIntoSelection()
             return true
+        case .click:
+            clickSelection()
+            return true
         case .typeCharacter(let character):
             guard zoom.allowsDirectSelection else { return true }
 
@@ -122,6 +128,20 @@ final class OverlayController {
 
         selection.reset()
         updateGridView()
+    }
+
+    private func clickSelection() {
+        guard let viewPoint = gridView.selectedPoint(),
+              let screen = window.screen else {
+            return
+        }
+
+        let windowPoint = gridView.convert(viewPoint, to: nil)
+        let screenPoint = window.convertPoint(toScreen: windowPoint)
+        let target = ClickTarget(appKitPoint: screenPoint, screen: screen)
+
+        hide()
+        onClick(target)
     }
 
     private func resetInteractionState() {

@@ -30,6 +30,14 @@ struct KeyboardShortcutsTests {
         #expect(KeyboardShortcuts.command(for: commandSpace) == nil)
     }
 
+    @Test func returnAndKeypadEnterPerformTheClick() throws {
+        let returnEvent = try event(character: "\r", keyCode: 36, modifiers: [])
+        let keypadEnterEvent = try event(character: "\r", keyCode: 76, modifiers: [.numericPad])
+
+        #expect(KeyboardShortcuts.command(for: returnEvent) == .click)
+        #expect(KeyboardShortcuts.command(for: keypadEnterEvent) == .click)
+    }
+
     private func event(
         character: String,
         keyCode: UInt16,

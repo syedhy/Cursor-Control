@@ -5,8 +5,8 @@ on screen without taking your hands off the keyboard.
 
 > [!NOTE]
 > VimClick is under active development. The current codebase contains the
-> Phase 5 precision-zoom foundation; clicking functionality is not
-> available yet.
+> Phase 6 keyboard-driven clicking foundation; the global activation shortcut
+> is not available yet.
 
 ## Goals
 
@@ -81,13 +81,16 @@ grid inside that cell and resets selection to `aa`. In this precision view,
 direct cell identifiers and further zooming are disabled; use only
 **Control-H/J/K/L** to position the center point before clicking.
 
+Press **Return** to perform a left click at the center dot and close the
+overlay.
+
 The planned default activation shortcut is **Command-Shift-Space**.
 
 ## Accessibility permission
 
-VimClick will require Accessibility permission to synthesize mouse clicks.
-That permission is not requested by the Phase 1 foundation because clicking is
-not implemented yet.
+VimClick requires Accessibility permission only to synthesize the left click
+requested when you press Return. If access is missing, VimClick explains why it
+is needed and can open the correct System Settings pane.
 
 Once implemented, permission can be granted in **System Settings → Privacy &
 Security → Accessibility**. VimClick will use this access only to perform the
@@ -117,7 +120,7 @@ _A keyboard-driven usage demo will be added before the first release._
 - [x] Phase 3 — Coordinate selection and center-point state
 - [x] Phase 4 — Vim-style navigation with key repeat
 - [x] Phase 5 — Recursive zoom system
-- [ ] Phase 6 — Accessibility checks and mouse click simulation
+- [x] Phase 6 — Accessibility checks and mouse click simulation
 - [ ] Phase 7 — Global activation shortcut
 - [ ] Phase 8 — Settings and visual polish
 - [ ] Phase 9 — DMG and GitHub Releases preparation
@@ -131,10 +134,12 @@ release checks, and maintainer instructions are scheduled for Phase 9.
 
 ```text
 Sources/VimClick/
+├── Accessibility/ Accessibility permission guidance
 ├── Application/   App lifecycle
 ├── Grid/          Grid layout and rendering
 ├── Keyboard/      Overlay keyboard input
 ├── MenuBar/       Status item and menu ownership
+├── Mouse/         Coordinate conversion and native clicking
 ├── Overlay/       Screen detection and overlay window ownership
 ├── Selection/     Coordinate-selection state
 ├── Settings/      Settings window

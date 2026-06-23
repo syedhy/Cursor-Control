@@ -24,6 +24,13 @@ final class GridView: NSView {
         needsDisplay = true
     }
 
+    func selectedPoint() -> NSPoint? {
+        guard case .cell(let coordinate) = selection.highlight else { return nil }
+
+        let activeRegion = zoom.activeRegion(in: bounds, coordinateSystem: coordinateSystem)
+        return coordinateSystem.center(of: coordinate, in: activeRegion)
+    }
+
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
 
@@ -33,7 +40,7 @@ final class GridView: NSView {
         drawSelectionHighlight(in: activeRegion)
         drawGrid(in: activeRegion)
         drawLabels(in: activeRegion)
-        drawCenterDot(in: activeRegion)
+        drawCenterDot()
     }
 
     private func drawBackground() {
@@ -123,10 +130,8 @@ final class GridView: NSView {
         }
     }
 
-    private func drawCenterDot(in activeRegion: NSRect) {
-        guard case .cell(let coordinate) = selection.highlight else { return }
-
-        let center = coordinateSystem.center(of: coordinate, in: activeRegion)
+    private func drawCenterDot() {
+        guard let center = selectedPoint() else { return }
         let dotDiameter: CGFloat = 7
         let dotRect = NSRect(
             x: center.x - (dotDiameter / 2),
