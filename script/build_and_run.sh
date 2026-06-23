@@ -48,6 +48,15 @@ cat >"$INFO_PLIST" <<PLIST
 </plist>
 PLIST
 
+# Keep one designated identity so macOS Accessibility trust survives local rebuilds.
+/usr/bin/codesign \
+  --force \
+  --sign - \
+  --identifier "$BUNDLE_ID" \
+  --requirements "=designated => identifier \"$BUNDLE_ID\"" \
+  "$APP_BUNDLE"
+/usr/bin/codesign --verify --deep --strict "$APP_BUNDLE"
+
 open_app() {
   /usr/bin/open -n "$APP_BUNDLE"
 }

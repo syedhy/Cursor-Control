@@ -8,7 +8,7 @@ struct AccessibilityPermissionAlert {
         let alert = NSAlert()
         alert.alertStyle = .informational
         alert.messageText = "Accessibility Permission Required"
-        alert.informativeText = "VimClick needs Accessibility access to perform the mouse click you request. Enable VimClick in System Settings → Privacy & Security → Accessibility."
+        alert.informativeText = "VimClick needs Accessibility access to perform the mouse click you request. Enable VimClick in System Settings → Privacy & Security → Accessibility. If VimClick is already enabled but this message continues, remove the old entry with the minus button, reopen this copy, and grant access again."
         alert.addButton(withTitle: "Not Now")
         alert.addButton(withTitle: "Open System Settings")
 

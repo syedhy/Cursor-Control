@@ -96,6 +96,11 @@ Once implemented, permission can be granted in **System Settings → Privacy &
 Security → Accessibility**. VimClick will use this access only to perform the
 click explicitly requested by the user.
 
+If VimClick remains untrusted after it is enabled, remove the existing VimClick
+entry with the minus button, reopen the current app, and grant access again.
+This one-time reset may be necessary when replacing an older development build
+that used a different local code-signing identity.
+
 ## Gatekeeper
 
 Early GitHub Releases may be unsigned because building VimClick does not
