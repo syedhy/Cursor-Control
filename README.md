@@ -5,8 +5,8 @@ on screen without taking your hands off the keyboard.
 
 > [!NOTE]
 > VimClick is under active development. The current codebase contains the
-> Phase 2 overlay foundation; coordinate selection and clicking functionality
-> are not available yet.
+> Phase 3 coordinate-selection foundation; clicking functionality is not
+> available yet.
 
 ## Goals
 
@@ -68,6 +68,10 @@ open a main application window or appear in the Dock. The current build provides
 
 Press **Escape** to close the overlay.
 
+Type a two-letter cell identifier to select it. The first character highlights
+the matching row; the second highlights the exact cell and displays its center
+point.
+
 The planned default activation shortcut is **Command-Shift-Space**.
 
 ## Accessibility permission
@@ -101,7 +105,7 @@ _A keyboard-driven usage demo will be added before the first release._
 
 - [x] Phase 1 — AppKit menu bar foundation and repository setup
 - [x] Phase 2 — Fullscreen overlay and grid rendering
-- [ ] Phase 3 — Coordinate selection and center-point state
+- [x] Phase 3 — Coordinate selection and center-point state
 - [ ] Phase 4 — Vim-style navigation with key repeat
 - [ ] Phase 5 — Recursive zoom system
 - [ ] Phase 6 — Accessibility checks and mouse click simulation
@@ -123,6 +127,7 @@ Sources/VimClick/
 ├── Keyboard/      Overlay keyboard input
 ├── MenuBar/       Status item and menu ownership
 ├── Overlay/       Screen detection and overlay window ownership
+├── Selection/     Coordinate-selection state
 ├── Settings/      Settings window
 └── Support/       Shared application constants
 script/            Build and run tooling

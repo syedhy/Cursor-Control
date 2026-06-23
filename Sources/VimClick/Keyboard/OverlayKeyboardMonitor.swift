@@ -4,16 +4,11 @@ import AppKit
 final class OverlayKeyboardMonitor {
     private var monitor: Any?
 
-    func start(onCancel: @escaping @MainActor () -> Void) {
+    func start(onKeyDown: @escaping @MainActor (NSEvent) -> Bool) {
         stop()
 
         monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            guard event.keyCode == KeyboardKeyCodes.escape else {
-                return event
-            }
-
-            onCancel()
-            return nil
+            onKeyDown(event) ? nil : event
         }
     }
 

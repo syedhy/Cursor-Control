@@ -14,6 +14,10 @@ let package = Package(
         .executableTarget(
             name: "VimClick",
             path: "Sources/VimClick"
+        ),
+        .testTarget(
+            name: "VimClickTests",
+            dependencies: ["VimClick"]
         )
     ]
 )
