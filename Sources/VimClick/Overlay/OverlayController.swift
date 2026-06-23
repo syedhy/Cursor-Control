@@ -70,25 +70,44 @@ final class OverlayController {
     }
 
     private func handleKeyDown(_ event: NSEvent) -> Bool {
-        if event.keyCode == KeyboardKeyCodes.escape {
-            hide()
-            return true
-        }
-
-        let disallowedModifiers: NSEvent.ModifierFlags = [.command, .control, .option]
-        guard event.modifierFlags.intersection(disallowedModifiers).isEmpty,
-              let characters = event.charactersIgnoringModifiers?.lowercased(),
-              characters.count == 1,
-              let character = characters.first else {
+        guard let command = KeyboardShortcuts.command(for: event) else {
             return false
         }
 
-        if selection.handleCharacter(character, coordinateSystem: coordinateSystem) {
+        switch command {
+        case .cancel:
+            hide()
+            return true
+        case .moveLeft:
+            moveSelection(rowDelta: 0, columnDelta: -1)
+            return true
+        case .moveDown:
+            moveSelection(rowDelta: 1, columnDelta: 0)
+            return true
+        case .moveUp:
+            moveSelection(rowDelta: -1, columnDelta: 0)
+            return true
+        case .moveRight:
+            moveSelection(rowDelta: 0, columnDelta: 1)
+            return true
+        case .typeCharacter(let character):
+            if selection.handleCharacter(character, coordinateSystem: coordinateSystem) {
+                gridView.update(selection: selection)
+            }
+
+            // Printable input is consumed even when it is not a configured identifier.
+            return true
+        }
+    }
+
+    private func moveSelection(rowDelta: Int, columnDelta: Int) {
+        if selection.move(
+            rowDelta: rowDelta,
+            columnDelta: columnDelta,
+            coordinateSystem: coordinateSystem
+        ) {
             gridView.update(selection: selection)
         }
-
-        // Printable input is consumed even when it is not a configured identifier.
-        return true
     }
 
     private func resetSelection() {

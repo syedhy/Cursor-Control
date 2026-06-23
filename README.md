@@ -5,7 +5,7 @@ on screen without taking your hands off the keyboard.
 
 > [!NOTE]
 > VimClick is under active development. The current codebase contains the
-> Phase 3 coordinate-selection foundation; clicking functionality is not
+> Phase 4 keyboard-navigation foundation; clicking functionality is not
 > available yet.
 
 ## Goals
@@ -72,6 +72,10 @@ Type a two-letter cell identifier to select it. The first character highlights
 the matching row; the second highlights the exact cell and displays its center
 point.
 
+The selection begins at `aa`. Use **Control-H**, **Control-J**, **Control-K**,
+and **Control-L** to move left, down, up, and right. Movement stops at grid
+boundaries and supports normal macOS key repeat.
+
 The planned default activation shortcut is **Command-Shift-Space**.
 
 ## Accessibility permission
@@ -106,7 +110,7 @@ _A keyboard-driven usage demo will be added before the first release._
 - [x] Phase 1 — AppKit menu bar foundation and repository setup
 - [x] Phase 2 — Fullscreen overlay and grid rendering
 - [x] Phase 3 — Coordinate selection and center-point state
-- [ ] Phase 4 — Vim-style navigation with key repeat
+- [x] Phase 4 — Vim-style navigation with key repeat
 - [ ] Phase 5 — Recursive zoom system
 - [ ] Phase 6 — Accessibility checks and mouse click simulation
 - [ ] Phase 7 — Global activation shortcut

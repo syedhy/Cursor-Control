@@ -6,11 +6,11 @@ struct SelectionState: Equatable {
     }
 
     private(set) var coordinate: GridCoordinate = .first
-    private(set) var highlight: Highlight = .none
+    private(set) var highlight: Highlight = .cell(.first)
 
     mutating func reset() {
         coordinate = .first
-        highlight = .none
+        highlight = .cell(.first)
     }
 
     @discardableResult
@@ -31,6 +31,26 @@ struct SelectionState: Equatable {
 
         coordinate = GridCoordinate(row: row, column: 0)
         highlight = .row(row)
+        return true
+    }
+
+    @discardableResult
+    mutating func move(
+        rowDelta: Int,
+        columnDelta: Int,
+        coordinateSystem: GridCoordinateSystem
+    ) -> Bool {
+        let destination = GridCoordinate(
+            row: min(max(coordinate.row + rowDelta, 0), coordinateSystem.rowCount - 1),
+            column: min(max(coordinate.column + columnDelta, 0), coordinateSystem.columnCount - 1)
+        )
+
+        guard destination != coordinate || highlight != .cell(coordinate) else {
+            return false
+        }
+
+        coordinate = destination
+        highlight = .cell(destination)
         return true
     }
 }
