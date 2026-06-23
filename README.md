@@ -5,8 +5,8 @@ on screen without taking your hands off the keyboard.
 
 > [!NOTE]
 > VimClick is under active development. The current codebase contains the
-> Phase 1 application foundation; overlay and clicking functionality are not
-> available yet.
+> Phase 2 overlay foundation; coordinate selection and clicking functionality
+> are not available yet.
 
 ## Goals
 
@@ -60,11 +60,13 @@ the script only needs to be run again when rebuilding the source.
 ## Usage
 
 Opening `VimClick.app` adds a cursor icon to the macOS menu bar. It does not
-open a main application window or appear in the Dock. Phase 1 provides:
+open a main application window or appear in the Dock. The current build provides:
 
-- **Activate VimClick** — reserved for the overlay introduced in Phase 2
+- **Activate VimClick** — opens a grid overlay on the display containing the cursor
 - **Settings…** — opens the placeholder settings window
 - **Quit VimClick** — exits the application
+
+Press **Escape** to close the overlay.
 
 The planned default activation shortcut is **Command-Shift-Space**.
 
@@ -98,7 +100,7 @@ _A keyboard-driven usage demo will be added before the first release._
 ## Roadmap
 
 - [x] Phase 1 — AppKit menu bar foundation and repository setup
-- [ ] Phase 2 — Fullscreen overlay and grid rendering
+- [x] Phase 2 — Fullscreen overlay and grid rendering
 - [ ] Phase 3 — Coordinate selection and center-point state
 - [ ] Phase 4 — Vim-style navigation with key repeat
 - [ ] Phase 5 — Recursive zoom system
@@ -117,7 +119,10 @@ release checks, and maintainer instructions are scheduled for Phase 9.
 ```text
 Sources/VimClick/
 ├── Application/   App lifecycle
+├── Grid/          Grid layout and rendering
+├── Keyboard/      Overlay keyboard input
 ├── MenuBar/       Status item and menu ownership
+├── Overlay/       Screen detection and overlay window ownership
 ├── Settings/      Settings window
 └── Support/       Shared application constants
 script/            Build and run tooling
