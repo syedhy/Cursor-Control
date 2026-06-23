@@ -4,6 +4,7 @@ import AppKit
 final class GridView: NSView {
     private let coordinateSystem: GridCoordinateSystem
     private var selection = SelectionState()
+    private var zoom = ZoomState()
 
     init(coordinateSystem: GridCoordinateSystem = GridCoordinateSystem()) {
         self.coordinateSystem = coordinateSystem
@@ -17,19 +18,22 @@ final class GridView: NSView {
 
     override var isFlipped: Bool { true }
 
-    func update(selection: SelectionState) {
+    func update(selection: SelectionState, zoom: ZoomState) {
         self.selection = selection
+        self.zoom = zoom
         needsDisplay = true
     }
 
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
 
+        let activeRegion = zoom.activeRegion(in: bounds, coordinateSystem: coordinateSystem)
         drawBackground()
-        drawSelectionHighlight()
-        drawGrid()
-        drawLabels()
-        drawCenterDot()
+        drawActiveRegion(activeRegion)
+        drawSelectionHighlight(in: activeRegion)
+        drawGrid(in: activeRegion)
+        drawLabels(in: activeRegion)
+        drawCenterDot(in: activeRegion)
     }
 
     private func drawBackground() {
@@ -39,7 +43,19 @@ final class GridView: NSView {
         bounds.fill()
     }
 
-    private func drawSelectionHighlight() {
+    private func drawActiveRegion(_ activeRegion: NSRect) {
+        guard zoom.depth > 0 else { return }
+
+        NSColor.controlAccentColor.withAlphaComponent(0.08).setFill()
+        activeRegion.fill()
+
+        let border = NSBezierPath(rect: activeRegion)
+        border.lineWidth = 1.5
+        NSColor.controlAccentColor.withAlphaComponent(0.80).setStroke()
+        border.stroke()
+    }
+
+    private func drawSelectionHighlight(in activeRegion: NSRect) {
         let highlightFrame: NSRect
         let opacity: CGFloat
 
@@ -47,10 +63,10 @@ final class GridView: NSView {
         case .none:
             return
         case .row(let row):
-            highlightFrame = coordinateSystem.rowFrame(at: row, in: bounds)
+            highlightFrame = coordinateSystem.rowFrame(at: row, in: activeRegion)
             opacity = 0.12
         case .cell(let coordinate):
-            highlightFrame = coordinateSystem.cellFrame(for: coordinate, in: bounds)
+            highlightFrame = coordinateSystem.cellFrame(for: coordinate, in: activeRegion)
             opacity = 0.26
         }
 
@@ -58,21 +74,21 @@ final class GridView: NSView {
         highlightFrame.fill()
     }
 
-    private func drawGrid() {
-        let cellSize = coordinateSystem.cellSize(in: bounds)
+    private func drawGrid(in activeRegion: NSRect) {
+        let cellSize = coordinateSystem.cellSize(in: activeRegion)
         let path = NSBezierPath()
         path.lineWidth = AppConstants.gridLineWidth
 
         for column in 0...coordinateSystem.columnCount {
-            let x = bounds.minX + (CGFloat(column) * cellSize.width)
-            path.move(to: NSPoint(x: x, y: bounds.minY))
-            path.line(to: NSPoint(x: x, y: bounds.maxY))
+            let x = activeRegion.minX + (CGFloat(column) * cellSize.width)
+            path.move(to: NSPoint(x: x, y: activeRegion.minY))
+            path.line(to: NSPoint(x: x, y: activeRegion.maxY))
         }
 
         for row in 0...coordinateSystem.rowCount {
-            let y = bounds.minY + (CGFloat(row) * cellSize.height)
-            path.move(to: NSPoint(x: bounds.minX, y: y))
-            path.line(to: NSPoint(x: bounds.maxX, y: y))
+            let y = activeRegion.minY + (CGFloat(row) * cellSize.height)
+            path.move(to: NSPoint(x: activeRegion.minX, y: y))
+            path.line(to: NSPoint(x: activeRegion.maxX, y: y))
         }
 
         NSColor.labelColor
@@ -81,8 +97,10 @@ final class GridView: NSView {
         path.stroke()
     }
 
-    private func drawLabels() {
-        let cellSize = coordinateSystem.cellSize(in: bounds)
+    private func drawLabels(in activeRegion: NSRect) {
+        let cellSize = coordinateSystem.cellSize(in: activeRegion)
+        guard cellSize.width >= 20, cellSize.height >= 14 else { return }
+
         let fontSize = min(13, max(9, min(cellSize.width, cellSize.height) * 0.20))
         let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.monospacedSystemFont(ofSize: fontSize, weight: .medium),
@@ -94,7 +112,7 @@ final class GridView: NSView {
                 let coordinate = GridCoordinate(row: row, column: column)
                 let label = coordinateSystem.identifier(for: coordinate) as NSString
                 let labelSize = label.size(withAttributes: attributes)
-                let cellFrame = coordinateSystem.cellFrame(for: coordinate, in: bounds)
+                let cellFrame = coordinateSystem.cellFrame(for: coordinate, in: activeRegion)
                 let origin = NSPoint(
                     x: cellFrame.midX - (labelSize.width / 2),
                     y: cellFrame.midY - (labelSize.height / 2)
@@ -105,10 +123,10 @@ final class GridView: NSView {
         }
     }
 
-    private func drawCenterDot() {
+    private func drawCenterDot(in activeRegion: NSRect) {
         guard case .cell(let coordinate) = selection.highlight else { return }
 
-        let center = coordinateSystem.center(of: coordinate, in: bounds)
+        let center = coordinateSystem.center(of: coordinate, in: activeRegion)
         let dotDiameter: CGFloat = 7
         let dotRect = NSRect(
             x: center.x - (dotDiameter / 2),

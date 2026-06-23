@@ -8,6 +8,7 @@ final class OverlayController {
     private let gridView: GridView
     private let window: OverlayWindow
     private var selection = SelectionState()
+    private var zoom = ZoomState()
     private var previouslyActiveApplication: NSRunningApplication?
     private var presentationPending = false
 
@@ -47,7 +48,7 @@ final class OverlayController {
         presentationPending = false
         keyboardMonitor.stop()
         window.orderOut(nil)
-        resetSelection()
+        resetInteractionState()
 
         let applicationToRestore = previouslyActiveApplication
         previouslyActiveApplication = nil
@@ -60,7 +61,7 @@ final class OverlayController {
 
         previouslyActiveApplication = activeApplication
         window.setFrame(screen.frame, display: true)
-        resetSelection()
+        resetInteractionState()
         keyboardMonitor.start { [weak self] event in
             self?.handleKeyDown(event) ?? false
         }
@@ -90,9 +91,12 @@ final class OverlayController {
         case .moveRight:
             moveSelection(rowDelta: 0, columnDelta: 1)
             return true
+        case .zoom:
+            zoomIntoSelection()
+            return true
         case .typeCharacter(let character):
             if selection.handleCharacter(character, coordinateSystem: coordinateSystem) {
-                gridView.update(selection: selection)
+                updateGridView()
             }
 
             // Printable input is consumed even when it is not a configured identifier.
@@ -106,12 +110,25 @@ final class OverlayController {
             columnDelta: columnDelta,
             coordinateSystem: coordinateSystem
         ) {
-            gridView.update(selection: selection)
+            updateGridView()
         }
     }
 
-    private func resetSelection() {
+    private func zoomIntoSelection() {
+        guard case .cell(let coordinate) = selection.highlight else { return }
+        guard zoom.zoom(into: coordinate, coordinateSystem: coordinateSystem) else { return }
+
         selection.reset()
-        gridView.update(selection: selection)
+        updateGridView()
+    }
+
+    private func resetInteractionState() {
+        selection.reset()
+        zoom.reset()
+        updateGridView()
+    }
+
+    private func updateGridView() {
+        gridView.update(selection: selection, zoom: zoom)
     }
 }

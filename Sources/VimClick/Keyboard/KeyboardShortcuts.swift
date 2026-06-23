@@ -6,11 +6,13 @@ enum OverlayKeyboardCommand: Equatable {
     case moveDown
     case moveUp
     case moveRight
+    case zoom
     case typeCharacter(Character)
 }
 
 enum KeyboardShortcuts {
     static let cancelKeyCode: UInt16 = 53
+    static let zoomKeyCode: UInt16 = 49
     static let moveLeftCharacter: Character = "h"
     static let moveDownCharacter: Character = "j"
     static let moveUpCharacter: Character = "k"
@@ -21,13 +23,18 @@ enum KeyboardShortcuts {
             return .cancel
         }
 
+        let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        if event.keyCode == zoomKeyCode,
+           modifiers.intersection([.command, .control, .option]).isEmpty {
+            return .zoom
+        }
+
         guard let characters = event.charactersIgnoringModifiers?.lowercased(),
               characters.count == 1,
               let character = characters.first else {
             return nil
         }
 
-        let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
         let hasDisallowedMovementModifier = !modifiers.intersection([.command, .option]).isEmpty
 
         if modifiers.contains(.control), !hasDisallowedMovementModifier {

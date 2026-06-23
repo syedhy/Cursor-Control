@@ -22,6 +22,14 @@ struct KeyboardShortcutsTests {
         #expect(KeyboardShortcuts.command(for: event) == .typeCharacter("c"))
     }
 
+    @Test func spaceIsTheZoomCommandUnlessAConflictingModifierIsPressed() throws {
+        let zoomEvent = try event(character: " ", keyCode: 49, modifiers: [])
+        let commandSpace = try event(character: " ", keyCode: 49, modifiers: [.command])
+
+        #expect(KeyboardShortcuts.command(for: zoomEvent) == .zoom)
+        #expect(KeyboardShortcuts.command(for: commandSpace) == nil)
+    }
+
     private func event(
         character: String,
         keyCode: UInt16,
