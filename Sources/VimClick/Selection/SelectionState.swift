@@ -8,9 +8,9 @@ struct SelectionState: Equatable {
     private(set) var coordinate: GridCoordinate = .first
     private(set) var highlight: Highlight = .cell(.first)
 
-    mutating func reset() {
-        coordinate = .first
-        highlight = .cell(.first)
+    mutating func reset(to coordinate: GridCoordinate = .first) {
+        self.coordinate = coordinate
+        highlight = .cell(coordinate)
     }
 
     @discardableResult

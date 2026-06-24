@@ -26,6 +26,9 @@ struct GridCoordinateSystem {
 
     var rowCount: Int { rowIdentifiers.count }
     var columnCount: Int { columnIdentifiers.count }
+    var centerCoordinate: GridCoordinate {
+        GridCoordinate(row: rowCount / 2, column: columnCount / 2)
+    }
 
     func rowIndex(for identifier: Character) -> Int? {
         rowIdentifiers.firstIndex(of: identifier)
@@ -45,20 +48,40 @@ struct GridCoordinateSystem {
             && (0..<columnCount).contains(coordinate.column)
     }
 
-    func cellSize(in bounds: NSRect) -> NSSize {
-        NSSize(
-            width: bounds.width / CGFloat(columnCount),
-            height: bounds.height / CGFloat(rowCount)
+    func gridFrame(in bounds: NSRect) -> NSRect {
+        // Fill the entire display while preserving square cells. A small amount
+        // may extend beyond one pair of edges when the aspect ratios differ.
+        let side = max(
+            bounds.width / CGFloat(columnCount),
+            bounds.height / CGFloat(rowCount)
         )
+        let size = NSSize(
+            width: side * CGFloat(columnCount),
+            height: side * CGFloat(rowCount)
+        )
+
+        return NSRect(
+            x: bounds.midX - (size.width / 2),
+            y: bounds.midY - (size.height / 2),
+            width: size.width,
+            height: size.height
+        )
+    }
+
+    func cellSize(in bounds: NSRect) -> NSSize {
+        let gridFrame = gridFrame(in: bounds)
+        let side = gridFrame.width / CGFloat(columnCount)
+        return NSSize(width: side, height: side)
     }
 
     func cellFrame(for coordinate: GridCoordinate, in bounds: NSRect) -> NSRect {
         guard contains(coordinate) else { return .zero }
 
+        let gridFrame = gridFrame(in: bounds)
         let size = cellSize(in: bounds)
         return NSRect(
-            x: bounds.minX + (CGFloat(coordinate.column) * size.width),
-            y: bounds.minY + (CGFloat(coordinate.row) * size.height),
+            x: gridFrame.minX + (CGFloat(coordinate.column) * size.width),
+            y: gridFrame.minY + (CGFloat(coordinate.row) * size.height),
             width: size.width,
             height: size.height
         )
@@ -67,11 +90,12 @@ struct GridCoordinateSystem {
     func rowFrame(at row: Int, in bounds: NSRect) -> NSRect {
         guard (0..<rowCount).contains(row) else { return .zero }
 
+        let gridFrame = gridFrame(in: bounds)
         let cellHeight = cellSize(in: bounds).height
         return NSRect(
-            x: bounds.minX,
-            y: bounds.minY + (CGFloat(row) * cellHeight),
-            width: bounds.width,
+            x: gridFrame.minX,
+            y: gridFrame.minY + (CGFloat(row) * cellHeight),
+            width: gridFrame.width,
             height: cellHeight
         )
     }

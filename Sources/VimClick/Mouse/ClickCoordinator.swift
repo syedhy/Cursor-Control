@@ -6,6 +6,7 @@ final class ClickCoordinator {
     private let permissionAlert: AccessibilityPermissionAlert
     private let coordinateConverter: ScreenCoordinateConverter
     private let mouseClickService: MouseClickService
+    private var accessibilityGuidanceState = AccessibilityGuidanceState()
 
     init(
         permissionService: AccessibilityPermissionService = AccessibilityPermissionService(),
@@ -25,14 +26,22 @@ final class ClickCoordinator {
         }
     }
 
+    func refreshAccessibilityPermission() {
+        accessibilityGuidanceState.refresh(isTrusted: permissionService.isTrusted)
+    }
+
     private func executeLeftClick(at target: ClickTarget) {
-        guard permissionService.isTrusted else {
-            if permissionAlert.presentMissingPermission() {
+        let isTrusted = permissionService.isTrusted
+        guard isTrusted else {
+            if accessibilityGuidanceState.shouldPresentGuidance(isTrusted: isTrusted),
+               permissionAlert.presentMissingPermission() {
                 permissionService.requestSystemPrompt()
                 permissionService.openSystemSettings()
             }
             return
         }
+
+        accessibilityGuidanceState.refresh(isTrusted: true)
 
         guard let quartzPoint = coordinateConverter.quartzPoint(from: target),
               mouseClickService.leftClick(at: quartzPoint) else {

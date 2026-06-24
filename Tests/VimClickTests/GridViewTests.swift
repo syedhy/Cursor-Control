@@ -23,12 +23,15 @@ struct GridViewTests {
         view.frame = NSRect(x: 0, y: 0, width: 260, height: 170)
         var zoom = ZoomState()
         zoom.zoom(into: GridCoordinate(row: 2, column: 9), coordinateSystem: coordinateSystem)
-        let selection = SelectionState()
+        let precisionCoordinateSystem = GridCoordinateSystem(
+            rowIdentifiers: AppConstants.precisionGridRows,
+            columnIdentifiers: AppConstants.precisionGridColumns
+        )
+        var selection = SelectionState()
+        selection.reset(to: precisionCoordinateSystem.centerCoordinate)
 
         view.update(selection: selection, zoom: zoom)
 
-        let point = try #require(view.selectedPoint())
-        #expect(abs(point.x - (90 + (5.0 / 26.0))) < 0.0001)
-        #expect(abs(point.y - (20 + (5.0 / 17.0))) < 0.0001)
+        #expect(try #require(view.selectedPoint()) == NSPoint(x: 95, y: 25))
     }
 }

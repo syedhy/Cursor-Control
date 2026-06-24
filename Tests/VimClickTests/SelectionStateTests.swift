@@ -41,6 +41,16 @@ struct SelectionStateTests {
         #expect(selection.highlight == .cell(.first))
     }
 
+    @Test func resetCanStartPrecisionSelectionAtAnExplicitCenter() {
+        var selection = SelectionState()
+        let center = GridCoordinate(row: 12, column: 12)
+
+        selection.reset(to: center)
+
+        #expect(selection.coordinate == center)
+        #expect(selection.highlight == .cell(center))
+    }
+
     @Test func movementStartsAtAAAndStopsAtEveryBoundary() {
         var selection = SelectionState()
 

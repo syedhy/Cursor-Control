@@ -15,7 +15,20 @@ APP_BINARY="$APP_MACOS/$APP_NAME"
 INFO_PLIST="$APP_CONTENTS/Info.plist"
 
 cd "$ROOT_DIR"
-pkill -x "$APP_NAME" >/dev/null 2>&1 || true
+if pgrep -x "$APP_NAME" >/dev/null 2>&1; then
+  pkill -x "$APP_NAME"
+  for ((attempt = 0; attempt < 50; attempt++)); do
+    if ! pgrep -x "$APP_NAME" >/dev/null 2>&1; then
+      break
+    fi
+    sleep 0.1
+  done
+
+  if pgrep -x "$APP_NAME" >/dev/null 2>&1; then
+    echo "VimClick did not exit before rebuilding." >&2
+    exit 1
+  fi
+fi
 
 swift build
 BUILD_BINARY="$(swift build --show-bin-path)/$APP_NAME"

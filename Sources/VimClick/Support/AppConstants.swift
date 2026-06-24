@@ -6,6 +6,8 @@ enum AppConstants {
     // Developer configuration. These values are intentionally not user settings.
     static let gridRows = Array("abcdefghijklmnopq")
     static let gridColumns = Array("abcdefghijklmnopqrstuvwxyz")
+    static let precisionGridRows = Array("abcdefghijklmnopqrstuvwxy")
+    static let precisionGridColumns = precisionGridRows
     static let maxZoomDepth = 1
 
     static let overlayBackgroundOpacity = 0.10

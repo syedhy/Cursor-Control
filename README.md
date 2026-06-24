@@ -5,8 +5,8 @@ on screen without taking your hands off the keyboard.
 
 > [!NOTE]
 > VimClick is under active development. The current codebase contains the
-> Phase 6 keyboard-driven clicking foundation; the global activation shortcut
-> is not available yet.
+> Phase 7 keyboard-driven clicking foundation, including the global activation
+> shortcut and centered precision zoom.
 
 ## Goals
 
@@ -24,10 +24,11 @@ on screen without taking your hands off the keyboard.
 
 ## Build from source
 
-The build script is developer tooling; it is not part of the everyday user
-experience. It produces a normal `VimClick.app` bundle that can be opened from
-Finder like any other macOS application. Once launched, VimClick runs only in
-the menu bar—there is no main window and no Dock icon.
+The build script is developer tooling only; downloaded releases will not ask
+users to run it. It produces a normal `VimClick.app` bundle that can be opened
+from Finder like any other macOS application. Once built, that app can be
+reopened directly without rerunning the script. VimClick runs only in the menu
+bar—there is no main window and no Dock icon.
 
 Clone the repository, then run:
 
@@ -76,15 +77,16 @@ The selection begins at `aa`. Use **Control-H**, **Control-J**, **Control-K**,
 and **Control-L** to move left, down, up, and right. Movement stops at grid
 boundaries and supports normal macOS key repeat.
 
-Press **Space** once to zoom into the selected cell. VimClick draws the same
-grid inside that cell and resets selection to `aa`. In this precision view,
-direct cell identifiers and further zooming are disabled; use only
-**Control-H/J/K/L** to position the center point before clicking.
+Press **Space** once to zoom into the selected cell. VimClick draws a square
+25-by-25 precision grid inside that cell and starts at its exact center. In this
+precision view, direct cell identifiers, Control-modified movement, and further
+zooming are disabled; use plain **H/J/K/L** to position the center point before
+clicking.
 
 Press **Return** to perform a left click at the center dot and close the
 overlay.
 
-The planned default activation shortcut is **Command-Shift-Space**.
+The default global activation shortcut is **Command-Shift-Space**.
 
 ## Accessibility permission
 
@@ -92,9 +94,11 @@ VimClick requires Accessibility permission only to synthesize the left click
 requested when you press Return. If access is missing, VimClick explains why it
 is needed and can open the correct System Settings pane.
 
-Once implemented, permission can be granted in **System Settings → Privacy &
-Security → Accessibility**. VimClick will use this access only to perform the
-click explicitly requested by the user.
+Permission can be granted in **System Settings → Privacy & Security →
+Accessibility**. VimClick checks the native event-posting permission whenever
+the app becomes active and does not repeatedly show permission guidance for
+every attempted click. It uses this access only to perform input explicitly
+requested by the user.
 
 If VimClick remains untrusted after it is enabled, remove the existing VimClick
 entry with the minus button, reopen the current app, and grant access again.
@@ -126,14 +130,17 @@ _A keyboard-driven usage demo will be added before the first release._
 - [x] Phase 4 — Vim-style navigation with key repeat
 - [x] Phase 5 — Recursive zoom system
 - [x] Phase 6 — Accessibility checks and mouse click simulation
-- [ ] Phase 7 — Global activation shortcut
-- [ ] Phase 8 — Settings and visual polish
-- [ ] Phase 9 — DMG and GitHub Releases preparation
+- [x] Phase 7 — Reliability, global activation, and centered precision zoom
+- [ ] Phase 8 — Settings and configurable shortcut architecture
+- [ ] Phase 9 — Universal four-direction scrolling
+- [ ] Phase 10 — Vim cursor-control mode
+- [ ] Phase 11 — DMG and GitHub Releases preparation
 
 ## GitHub Releases
 
 Release artifacts will be attached to tagged GitHub Releases. DMG creation,
-release checks, and maintainer instructions are scheduled for Phase 9.
+release checks, and maintainer instructions are scheduled for Phase 11 after
+scrolling and cursor-control mode are complete.
 
 ## Project structure
 
@@ -142,7 +149,7 @@ Sources/VimClick/
 ├── Accessibility/ Accessibility permission guidance
 ├── Application/   App lifecycle
 ├── Grid/          Grid layout and rendering
-├── Keyboard/      Overlay keyboard input
+├── Keyboard/      Global shortcuts and overlay keyboard input
 ├── MenuBar/       Status item and menu ownership
 ├── Mouse/         Coordinate conversion and native clicking
 ├── Overlay/       Screen detection and overlay window ownership

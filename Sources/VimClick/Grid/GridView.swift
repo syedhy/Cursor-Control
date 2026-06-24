@@ -3,11 +3,19 @@ import AppKit
 @MainActor
 final class GridView: NSView {
     private let coordinateSystem: GridCoordinateSystem
+    private let precisionCoordinateSystem: GridCoordinateSystem
     private var selection = SelectionState()
     private var zoom = ZoomState()
 
-    init(coordinateSystem: GridCoordinateSystem = GridCoordinateSystem()) {
+    init(
+        coordinateSystem: GridCoordinateSystem = GridCoordinateSystem(),
+        precisionCoordinateSystem: GridCoordinateSystem = GridCoordinateSystem(
+            rowIdentifiers: AppConstants.precisionGridRows,
+            columnIdentifiers: AppConstants.precisionGridColumns
+        )
+    ) {
         self.coordinateSystem = coordinateSystem
+        self.precisionCoordinateSystem = precisionCoordinateSystem
         super.init(frame: .zero)
     }
 
@@ -28,7 +36,7 @@ final class GridView: NSView {
         guard case .cell(let coordinate) = selection.highlight else { return nil }
 
         let activeRegion = zoom.activeRegion(in: bounds, coordinateSystem: coordinateSystem)
-        return coordinateSystem.center(of: coordinate, in: activeRegion)
+        return activeCoordinateSystem.center(of: coordinate, in: activeRegion)
     }
 
     override func draw(_ dirtyRect: NSRect) {
@@ -70,10 +78,10 @@ final class GridView: NSView {
         case .none:
             return
         case .row(let row):
-            highlightFrame = coordinateSystem.rowFrame(at: row, in: activeRegion)
+            highlightFrame = activeCoordinateSystem.rowFrame(at: row, in: activeRegion)
             opacity = 0.12
         case .cell(let coordinate):
-            highlightFrame = coordinateSystem.cellFrame(for: coordinate, in: activeRegion)
+            highlightFrame = activeCoordinateSystem.cellFrame(for: coordinate, in: activeRegion)
             opacity = 0.26
         }
 
@@ -82,6 +90,7 @@ final class GridView: NSView {
     }
 
     private func drawGrid(in activeRegion: NSRect) {
+        let coordinateSystem = activeCoordinateSystem
         let cellSize = coordinateSystem.cellSize(in: activeRegion)
         let path = NSBezierPath()
         path.lineWidth = AppConstants.gridLineWidth
@@ -105,6 +114,7 @@ final class GridView: NSView {
     }
 
     private func drawLabels(in activeRegion: NSRect) {
+        let coordinateSystem = activeCoordinateSystem
         let cellSize = coordinateSystem.cellSize(in: activeRegion)
         guard cellSize.width >= 20, cellSize.height >= 14 else { return }
 
@@ -142,5 +152,9 @@ final class GridView: NSView {
 
         NSColor.controlAccentColor.setFill()
         NSBezierPath(ovalIn: dotRect).fill()
+    }
+
+    private var activeCoordinateSystem: GridCoordinateSystem {
+        zoom.depth == 0 ? coordinateSystem : precisionCoordinateSystem
     }
 }

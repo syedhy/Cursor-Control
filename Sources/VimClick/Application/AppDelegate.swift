@@ -6,6 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var menuBarController: MenuBarController?
     private var overlayController: OverlayController?
     private var settingsWindowController: SettingsWindowController?
+    private var globalShortcutService: GlobalShortcutService?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let clickCoordinator = ClickCoordinator()
@@ -18,6 +19,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let settingsWindowController = SettingsWindowController()
         self.settingsWindowController = settingsWindowController
+
+        let globalShortcutService = GlobalShortcutService()
+        globalShortcutService.registerActivationShortcut { [weak overlayController] in
+            overlayController?.show()
+        }
+        self.globalShortcutService = globalShortcutService
 
         menuBarController = MenuBarController(
             onActivate: { [weak overlayController] in
@@ -34,7 +41,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         false
     }
 
+    func applicationDidBecomeActive(_ notification: Notification) {
+        clickCoordinator?.refreshAccessibilityPermission()
+    }
+
     func applicationDidResignActive(_ notification: Notification) {
         overlayController?.handleApplicationDeactivation()
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        globalShortcutService?.unregisterAll()
     }
 }
