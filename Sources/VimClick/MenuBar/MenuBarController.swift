@@ -38,11 +38,12 @@ final class MenuBarController: NSObject {
     private func configureMenu() {
         let menu = NSMenu()
 
-        menu.addItem(
+        let activateItem = menu.addItem(
             withTitle: "Activate VimClick",
             action: #selector(activate),
-            keyEquivalent: ""
+            keyEquivalent: KeyboardShortcuts.activationKeyEquivalent
         )
+        activateItem.keyEquivalentModifierMask = KeyboardShortcuts.activationModifiers
         menu.addItem(
             withTitle: "Settings…",
             action: #selector(openSettings),

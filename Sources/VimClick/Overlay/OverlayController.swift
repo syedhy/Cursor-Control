@@ -6,6 +6,7 @@ final class OverlayController {
     private let screenProvider: CursorScreenProvider
     private let keyboardMonitor: OverlayKeyboardMonitor
     private let coordinateSystem: GridCoordinateSystem
+    private let precisionCoordinateSystem: GridCoordinateSystem
     private let gridView: GridView
     private let window: OverlayWindow
     private var selection = SelectionState()
@@ -17,14 +18,22 @@ final class OverlayController {
         onClick: @escaping @MainActor (ClickTarget) -> Void = { _ in },
         screenProvider: CursorScreenProvider = CursorScreenProvider(),
         keyboardMonitor: OverlayKeyboardMonitor = OverlayKeyboardMonitor(),
-        coordinateSystem: GridCoordinateSystem = GridCoordinateSystem()
+        coordinateSystem: GridCoordinateSystem = GridCoordinateSystem(),
+        precisionCoordinateSystem: GridCoordinateSystem = GridCoordinateSystem(
+            rowIdentifiers: AppConstants.precisionGridRows,
+            columnIdentifiers: AppConstants.precisionGridColumns
+        )
     ) {
         self.onClick = onClick
         self.screenProvider = screenProvider
         self.keyboardMonitor = keyboardMonitor
         self.coordinateSystem = coordinateSystem
+        self.precisionCoordinateSystem = precisionCoordinateSystem
 
-        let gridView = GridView(coordinateSystem: coordinateSystem)
+        let gridView = GridView(
+            coordinateSystem: coordinateSystem,
+            precisionCoordinateSystem: precisionCoordinateSystem
+        )
         self.gridView = gridView
         let window = OverlayWindow()
         window.contentView = gridView
@@ -74,11 +83,14 @@ final class OverlayController {
     }
 
     private func handleKeyDown(_ event: NSEvent) -> Bool {
-        guard let command = KeyboardShortcuts.command(for: event) else {
+        let keyboardMode: OverlayKeyboardMode = zoom.depth == 0 ? .coarse : .precision
+        guard let command = KeyboardShortcuts.command(for: event, mode: keyboardMode) else {
             return false
         }
 
         switch command {
+        case .ignore:
+            return true
         case .cancel:
             hide()
             return true
@@ -116,7 +128,7 @@ final class OverlayController {
         if selection.move(
             rowDelta: rowDelta,
             columnDelta: columnDelta,
-            coordinateSystem: coordinateSystem
+            coordinateSystem: activeCoordinateSystem
         ) {
             updateGridView()
         }
@@ -126,7 +138,7 @@ final class OverlayController {
         guard case .cell(let coordinate) = selection.highlight else { return }
         guard zoom.zoom(into: coordinate, coordinateSystem: coordinateSystem) else { return }
 
-        selection.reset()
+        selection.reset(to: precisionCoordinateSystem.centerCoordinate)
         updateGridView()
     }
 
@@ -152,5 +164,9 @@ final class OverlayController {
 
     private func updateGridView() {
         gridView.update(selection: selection, zoom: zoom)
+    }
+
+    private var activeCoordinateSystem: GridCoordinateSystem {
+        zoom.depth == 0 ? coordinateSystem : precisionCoordinateSystem
     }
 }

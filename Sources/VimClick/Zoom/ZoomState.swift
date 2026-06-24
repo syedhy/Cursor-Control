@@ -28,7 +28,7 @@ struct ZoomState: Equatable {
         in bounds: NSRect,
         coordinateSystem: GridCoordinateSystem
     ) -> NSRect {
-        path.reduce(bounds) { region, coordinate in
+        path.reduce(coordinateSystem.gridFrame(in: bounds)) { region, coordinate in
             coordinateSystem.cellFrame(for: coordinate, in: region)
         }
     }

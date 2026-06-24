@@ -1,15 +1,13 @@
 import AppKit
-@preconcurrency import ApplicationServices
+import CoreGraphics
 
 struct AccessibilityPermissionService {
     var isTrusted: Bool {
-        AXIsProcessTrusted()
+        CGPreflightPostEventAccess()
     }
 
     func requestSystemPrompt() {
-        let promptKey = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
-        let options = [promptKey: true] as CFDictionary
-        _ = AXIsProcessTrustedWithOptions(options)
+        _ = CGRequestPostEventAccess()
     }
 
     func openSystemSettings() {
