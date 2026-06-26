@@ -1,34 +1,40 @@
 enum ShortcutIdentifier: String, CaseIterable, Codable, Hashable {
-    case activateOverlay
     case activateCursorMode
     case scrollLeft
     case scrollDown
     case scrollUp
     case scrollRight
 
+    static let eventTapHandledCases: [ShortcutIdentifier] = [
+        .scrollLeft,
+        .scrollDown,
+        .scrollUp,
+        .scrollRight
+    ]
+
+    static let carbonHandledCases: [ShortcutIdentifier] = allCases.filter {
+        !eventTapHandledCases.contains($0)
+    }
+
     var hotKeyID: UInt32 {
         switch self {
-        case .activateOverlay:
-            return 1
         case .activateCursorMode:
-            return 2
+            return 1
         case .scrollLeft:
-            return 3
+            return 2
         case .scrollDown:
-            return 4
+            return 3
         case .scrollUp:
-            return 5
+            return 4
         case .scrollRight:
-            return 6
+            return 5
         }
     }
 
     var title: String {
         switch self {
-        case .activateOverlay:
-            return "Activate overlay"
         case .activateCursorMode:
-            return "Activate cursor mode"
+            return "Cursor control mode"
         case .scrollLeft:
             return "Scroll left"
         case .scrollDown:
@@ -42,12 +48,16 @@ enum ShortcutIdentifier: String, CaseIterable, Codable, Hashable {
 
     var settingsDescription: String {
         switch self {
-        case .activateOverlay:
-            return "Show the click grid anywhere on your Mac."
         case .activateCursorMode:
-            return "Reserved for Phase 10 cursor-control mode."
-        case .scrollLeft, .scrollDown, .scrollUp, .scrollRight:
-            return "Reserved for Phase 9 universal scrolling."
+            return "Enter or exit keyboard cursor-control mode."
+        case .scrollLeft:
+            return "Scroll the frontmost app left."
+        case .scrollDown:
+            return "Scroll the frontmost app down."
+        case .scrollUp:
+            return "Scroll the frontmost app up."
+        case .scrollRight:
+            return "Scroll the frontmost app right."
         }
     }
 }

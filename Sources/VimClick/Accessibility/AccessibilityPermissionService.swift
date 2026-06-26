@@ -1,6 +1,12 @@
 import AppKit
 import CoreGraphics
 
+protocol AccessibilityPermissionProviding {
+    var isTrusted: Bool { get }
+    func requestSystemPrompt()
+    func openSystemSettings()
+}
+
 struct AccessibilityPermissionService {
     var isTrusted: Bool {
         CGPreflightPostEventAccess()
@@ -20,3 +26,5 @@ struct AccessibilityPermissionService {
         NSWorkspace.shared.open(url)
     }
 }
+
+extension AccessibilityPermissionService: AccessibilityPermissionProviding {}

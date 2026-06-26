@@ -1,6 +1,12 @@
 import AppKit
 
 @MainActor
+protocol AccessibilityPermissionAlerting {
+    func presentMissingPermission() -> Bool
+    func presentClickFailure()
+}
+
+@MainActor
 struct AccessibilityPermissionAlert {
     func presentMissingPermission() -> Bool {
         NSApp.activate(ignoringOtherApps: true)
@@ -8,7 +14,7 @@ struct AccessibilityPermissionAlert {
         let alert = NSAlert()
         alert.alertStyle = .informational
         alert.messageText = "Accessibility Permission Required"
-        alert.informativeText = "VimClick needs Accessibility access to perform the mouse click you request. Enable VimClick in System Settings → Privacy & Security → Accessibility. If VimClick is already enabled but this message continues, remove the old entry with the minus button, reopen this copy, and grant access again."
+        alert.informativeText = "VimClick needs Accessibility access to send keyboard-requested input events, including clicks and scrolling. Enable VimClick in System Settings → Privacy & Security → Accessibility. If VimClick is already enabled but this message continues, remove the old entry with the minus button, reopen this copy, and grant access again."
         alert.addButton(withTitle: "Not Now")
         alert.addButton(withTitle: "Open System Settings")
 
@@ -26,3 +32,5 @@ struct AccessibilityPermissionAlert {
         alert.runModal()
     }
 }
+
+extension AccessibilityPermissionAlert: AccessibilityPermissionAlerting {}

@@ -1,16 +1,19 @@
+import CoreGraphics
+import Foundation
+
 enum AppConstants {
     static let appName = "VimClick"
     static let bundleIdentifier = "io.github.vimclick.VimClick"
     static let minimumSystemVersion = "13.0"
 
-    // Developer configuration. These values are intentionally not user settings.
-    static let gridRows = Array("abcdefghijklmnopq")
-    static let gridColumns = Array("abcdefghijklmnopqrstuvwxyz")
-    static let precisionGridRows = Array("abcdefghijklmnopqrstuvwxy")
-    static let precisionGridColumns = precisionGridRows
-    static let maxZoomDepth = 1
-
-    static let overlayBackgroundOpacity = 0.10
-    static let gridLineOpacity = 0.24
-    static let gridLineWidth = 0.75
+    static let defaultScrollPixelDelta: Int32 = 20
+    static let defaultScrollEventsPerShortcut = 2
+    static let defaultScrollAccelerationPerRepeat = 0.2
+    static let defaultScrollMaximumAccelerationMultiplier = 4.0
+    static let defaultScrollVerticalMultiplier = 1.0
+    static let defaultScrollHorizontalMultiplier = 1.0
+    static let defaultCursorInitialSpeed = 0.5
+    static let defaultCursorMaximumSpeed = 30.0
+    static let defaultCursorAccelerationPerFrame = 1.0
+    static let defaultCursorFrameRate = 60.0
 }

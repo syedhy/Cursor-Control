@@ -3,18 +3,21 @@ import AppKit
 @MainActor
 final class MenuBarController: NSObject {
     private let statusItem: NSStatusItem
-    private let onActivate: () -> Void
+    private let onToggleCursorMode: () -> Void
+    private let onShowGuide: () -> Void
     private let onOpenSettings: () -> Void
     private let onQuit: () -> Void
-    private var activateItem: NSMenuItem?
+    private var cursorModeItem: NSMenuItem?
 
     init(
-        activationShortcut: KeyboardShortcut,
-        onActivate: @escaping () -> Void,
+        cursorModeShortcut: KeyboardShortcut,
+        onToggleCursorMode: @escaping () -> Void,
+        onShowGuide: @escaping () -> Void,
         onOpenSettings: @escaping () -> Void,
         onQuit: @escaping () -> Void
     ) {
-        self.onActivate = onActivate
+        self.onToggleCursorMode = onToggleCursorMode
+        self.onShowGuide = onShowGuide
         self.onOpenSettings = onOpenSettings
         self.onQuit = onQuit
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -22,14 +25,14 @@ final class MenuBarController: NSObject {
         super.init()
 
         configureStatusItem()
-        configureMenu(activationShortcut: activationShortcut)
+        configureMenu(cursorModeShortcut: cursorModeShortcut)
     }
 
     private func configureStatusItem() {
         guard let button = statusItem.button else { return }
 
         let image = NSImage(
-            systemSymbolName: "cursorarrow.click.2",
+            systemSymbolName: "cursorarrow.motionlines",
             accessibilityDescription: AppConstants.appName
         )
         image?.isTemplate = true
@@ -37,21 +40,46 @@ final class MenuBarController: NSObject {
         button.toolTip = AppConstants.appName
     }
 
-    func updateActivationShortcut(_ shortcut: KeyboardShortcut) {
-        activateItem?.keyEquivalent = shortcut.keyEquivalent
-        activateItem?.keyEquivalentModifierMask = shortcut.keyEquivalentModifierMask
+    func updateCursorModeShortcut(_ shortcut: KeyboardShortcut) {
+        cursorModeItem?.keyEquivalent = shortcut.keyEquivalent
+        cursorModeItem?.keyEquivalentModifierMask = shortcut.keyEquivalentModifierMask
     }
 
-    private func configureMenu(activationShortcut: KeyboardShortcut) {
+    func setCursorModeActive(_ isActive: Bool) {
+        cursorModeItem?.state = isActive ? .on : .off
+        cursorModeItem?.title = isActive ? "Exit Cursor Control Mode" : "Cursor Control Mode"
+        guard let button = statusItem.button else { return }
+
+        let symbolName = isActive ? "cursorarrow.rays" : "cursorarrow.motionlines"
+        let image = NSImage(
+            systemSymbolName: symbolName,
+            accessibilityDescription: isActive
+                ? "VimClick cursor control mode active"
+                : AppConstants.appName
+        )
+        image?.isTemplate = true
+        button.image = image
+        button.toolTip = isActive
+            ? "VimClick Cursor Control Mode"
+            : AppConstants.appName
+    }
+
+    private func configureMenu(cursorModeShortcut: KeyboardShortcut) {
         let menu = NSMenu()
 
-        let activateItem = menu.addItem(
-            withTitle: "Activate VimClick",
-            action: #selector(activate),
-            keyEquivalent: activationShortcut.keyEquivalent
+        let cursorModeItem = menu.addItem(
+            withTitle: "Cursor Control Mode",
+            action: #selector(toggleCursorMode),
+            keyEquivalent: cursorModeShortcut.keyEquivalent
         )
-        activateItem.keyEquivalentModifierMask = activationShortcut.keyEquivalentModifierMask
-        self.activateItem = activateItem
+        cursorModeItem.keyEquivalentModifierMask = cursorModeShortcut.keyEquivalentModifierMask
+        self.cursorModeItem = cursorModeItem
+        menu.addItem(.separator())
+        menu.addItem(
+            withTitle: "How to Use VimClick…",
+            action: #selector(showGuide),
+            keyEquivalent: "?"
+        )
         menu.addItem(
             withTitle: "Settings…",
             action: #selector(openSettings),
@@ -71,8 +99,12 @@ final class MenuBarController: NSObject {
         statusItem.menu = menu
     }
 
-    @objc private func activate() {
-        onActivate()
+    @objc private func toggleCursorMode() {
+        onToggleCursorMode()
+    }
+
+    @objc private func showGuide() {
+        onShowGuide()
     }
 
     @objc private func openSettings() {

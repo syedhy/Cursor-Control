@@ -50,7 +50,7 @@ struct KeyboardShortcut: Codable, Equatable, Hashable {
     }
 
     private static func keyEquivalent(from event: NSEvent) -> String {
-        if event.keyCode == KeyboardShortcuts.spaceKeyCode {
+        if event.keyCode == 49 {
             return " "
         }
 
@@ -72,7 +72,7 @@ struct KeyboardShortcut: Codable, Equatable, Hashable {
 
     private static func displayKey(keyCode: UInt16, keyEquivalent: String) -> String {
         switch keyCode {
-        case KeyboardShortcuts.spaceKeyCode:
+        case 49:
             return "Space"
         case KeyboardShortcuts.escapeKeyCode:
             return "Escape"

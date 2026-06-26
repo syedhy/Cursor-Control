@@ -85,17 +85,17 @@ final class GlobalShortcutService {
         guard handlerStatus == noErr else {
             logger.error("Could not install hotkey handler: \(handlerStatus)")
             unregisterAll()
-            let fallbackShortcut = KeyboardShortcuts.defaultActivationShortcut
+            let fallbackShortcut = KeyboardShortcuts.defaultGlobalShortcuts[.activateCursorMode]!
             return .failure(
                 GlobalShortcutRegistrationFailure(
-                    identifier: .activateOverlay,
+                    identifier: .activateCursorMode,
                     shortcut: fallbackShortcut,
                     status: handlerStatus
                 )
             )
         }
 
-        for identifier in ShortcutIdentifier.allCases {
+        for identifier in ShortcutIdentifier.carbonHandledCases {
             guard let shortcut = shortcuts[identifier] else {
                 continue
             }

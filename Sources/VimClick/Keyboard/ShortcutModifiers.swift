@@ -23,6 +23,15 @@ struct ShortcutModifiers: OptionSet, Codable, Hashable {
         self = result
     }
 
+    init(cgEventFlags: CGEventFlags) {
+        var result: ShortcutModifiers = []
+        if cgEventFlags.contains(.maskCommand) { result.insert(.command) }
+        if cgEventFlags.contains(.maskShift) { result.insert(.shift) }
+        if cgEventFlags.contains(.maskAlternate) { result.insert(.option) }
+        if cgEventFlags.contains(.maskControl) { result.insert(.control) }
+        self = result
+    }
+
     var eventModifierFlags: NSEvent.ModifierFlags {
         var result: NSEvent.ModifierFlags = []
         if contains(.command) { result.insert(.command) }

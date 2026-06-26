@@ -1,17 +1,16 @@
 # VimClick
 
-VimClick is an open-source, native macOS menu bar utility for clicking anywhere
-on screen without taking your hands off the keyboard.
+VimClick is an open-source, native macOS menu bar utility for controlling the
+mouse cursor and scrolling with the keyboard.
 
 > [!NOTE]
-> VimClick is under active development. The current codebase contains the
-> Phase 8 keyboard-driven clicking foundation, including global shortcut
-> configuration, centered precision zoom, and a native settings window.
+> VimClick is under active development. The current app is focused on two core
+> features: Vim-style cursor control and universal scrolling.
 
 ## Goals
 
 - Native AppKit interface with no web runtime
-- Fast, keyboard-first interaction
+- Fast, keyboard-first cursor movement and scrolling
 - Lightweight menu bar presence
 - Clear, maintainable architecture
 - Straightforward GitHub Releases distribution
@@ -61,47 +60,64 @@ the script only needs to be run again when rebuilding the source.
 ## Usage
 
 Opening `VimClick.app` adds a cursor icon to the macOS menu bar. It does not
-open a main application window or appear in the Dock. The current build provides:
+open a main application window or appear in the Dock.
 
-- **Activate VimClick** — opens a grid overlay on the display containing the cursor
-- **Settings…** — opens shortcut preferences
-- **Quit VimClick** — exits the application
+The menu bar menu contains:
 
-Press **Escape** to close the overlay.
+- **Cursor Control Mode** — enter or exit keyboard cursor-control mode
+- **How to Use VimClick…** — open the onboarding guide
+- **Settings…** — configure shortcuts, scrolling, and cursor movement
+- **Quit VimClick** — exit the application
 
-Type a two-letter cell identifier to select it. The first character highlights
-the matching row; the second highlights the exact cell and displays its center
-point.
+### Cursor Control Mode
 
-The selection begins at `aa`. Use **Control-H**, **Control-J**, **Control-K**,
-and **Control-L** to move left, down, up, and right. Movement stops at grid
-boundaries and supports normal macOS key repeat.
+Cursor Control Mode lets you move the visible mouse cursor directly from the
+keyboard. Press **Command-Shift-Option-R** by default to enter or exit cursor
+mode. While it is active:
 
-Press **Space** once to zoom into the selected cell. VimClick draws a square
-25-by-25 precision grid inside that cell and starts at its exact center. In this
-precision view, direct cell identifiers, Control-modified movement, and further
-zooming are disabled; use plain **H/J/K/L** to position the center point before
-clicking.
+- **H/J/K/L** move the real cursor left, down, up, and right
+- Holding movement keys accelerates smoothly
+- Holding two movement keys moves diagonally
+- **Return** left-clicks at the current cursor location
+- **Escape** exits cursor mode while movement control is active
 
-Press **Return** to perform a left click at the center dot and close the
-overlay.
+After pressing **Return**, VimClick switches into a text-entry pass-through
+state. This is useful when you click into a search field or text box: **H/J/K/L**
+type normally instead of moving the cursor. Press **Escape** to return to cursor
+movement mode.
 
-The default global shortcuts are:
+### Scrolling
 
-- **Command-Shift-Space** — activate the overlay
-- **Command-Shift-Option-R** — reserved for cursor-control mode
-- **Command-Control-H/J/K/L** — reserved for left/down/up/right scrolling
+Scrolling works globally without opening any extra window. Press
+**Command-Control-Option-H/J/K/L** to scroll left, down, up, and right in the
+frontmost app.
+
+Scroll shortcuts also work while Cursor Control Mode is active, including while
+you are in the text-entry pass-through state.
+
+Settings lets you tune the scroll distance from single-pixel movement up to
+fast movement, the number of scroll events per repeat, hold acceleration,
+acceleration cap, and separate vertical/horizontal multipliers.
+
+## Default global shortcuts
+
+- **Command-Shift-Option-R** — enter or exit cursor-control mode
+- **Command-Control-Option-H/J/K/L** — scroll left/down/up/right in the frontmost app
 
 Settings supports recording new global shortcuts, rejecting duplicates,
 persisting changes, recovering from registration failures, and restoring
-defaults. Mode-local keys such as **H/J/K/L**, **Space**, **Return**, and
-**Escape** are fixed and are not exposed as settings.
+defaults. It has separate sections for shortcuts, scrolling, and cursor
+control. Cursor-control tuning includes initial speed, maximum speed,
+acceleration, and update rate so users can balance precise single-tap movement
+with fast corner-to-corner travel. Mode-local keys such as **H/J/K/L**,
+**Return**, and **Escape** are fixed and are not exposed as settings.
 
 ## Accessibility permission
 
-VimClick requires Accessibility permission only to synthesize the left click
-requested when you press Return. If access is missing, VimClick explains why it
-is needed and can open the correct System Settings pane.
+VimClick requires Accessibility permission to synthesize keyboard-requested
+input events: cursor movement, clicks, and universal scrolling. If access is
+missing, VimClick explains why it is needed and can open the correct System
+Settings pane.
 
 Permission can be granted in **System Settings → Privacy & Security →
 Accessibility**. VimClick checks the native event-posting permission whenever
@@ -125,7 +141,7 @@ Never bypass Gatekeeper for an app obtained from an untrusted source.
 
 ## Screenshots
 
-_Screenshots will be added as the overlay interface is implemented._
+_Screenshots will be added before the first release._
 
 ## Demo GIF
 
@@ -134,22 +150,17 @@ _A keyboard-driven usage demo will be added before the first release._
 ## Roadmap
 
 - [x] Phase 1 — AppKit menu bar foundation and repository setup
-- [x] Phase 2 — Fullscreen overlay and grid rendering
-- [x] Phase 3 — Coordinate selection and center-point state
-- [x] Phase 4 — Vim-style navigation with key repeat
-- [x] Phase 5 — Recursive zoom system
-- [x] Phase 6 — Accessibility checks and mouse click simulation
-- [x] Phase 7 — Reliability, global activation, and centered precision zoom
-- [x] Phase 8 — Settings and configurable shortcut architecture
-- [ ] Phase 9 — Universal four-direction scrolling
-- [ ] Phase 10 — Vim cursor-control mode
-- [ ] Phase 11 — DMG and GitHub Releases preparation
+- [x] Cursor Control — Vim-style real cursor movement
+- [x] Universal Scrolling — four-direction keyboard scrolling
+- [x] Settings — shortcut, scroll, and cursor tuning
+- [x] Onboarding — built-in quick-start guide
+- [ ] Release Preparation — DMG and GitHub Releases preparation
 
 ## GitHub Releases
 
 Release artifacts will be attached to tagged GitHub Releases. DMG creation,
-release checks, and maintainer instructions are scheduled for Phase 11 after
-scrolling and cursor-control mode are complete.
+release checks, and maintainer instructions are scheduled after cursor control,
+scrolling, settings, and onboarding are complete.
 
 ## Project structure
 
@@ -157,15 +168,14 @@ scrolling and cursor-control mode are complete.
 Sources/VimClick/
 ├── Accessibility/ Accessibility permission guidance
 ├── Application/   App lifecycle
-├── Grid/          Grid layout and rendering
-├── Keyboard/      Global shortcuts and overlay keyboard input
+├── CursorControl/ Vim-style real cursor movement
+├── Keyboard/      Global shortcuts and key capture
 ├── MenuBar/       Status item and menu ownership
-├── Mouse/         Coordinate conversion and native clicking
-├── Overlay/       Screen detection and overlay window ownership
-├── Selection/     Coordinate-selection state
+├── Mouse/         Native mouse clicking
+├── Onboarding/    Built-in quick-start guide
+├── Scroll/        Universal scroll event targeting and posting
 ├── Settings/      Settings window
-├── Support/       Shared application constants
-└── Zoom/          Recursive precision state
+└── Support/       Shared application constants
 script/            Build and run tooling
 ```
 

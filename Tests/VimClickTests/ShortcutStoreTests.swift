@@ -1,4 +1,5 @@
 import AppKit
+import Foundation
 import Testing
 @testable import VimClick
 
@@ -6,8 +7,11 @@ struct ShortcutStoreTests {
     @Test func loadsDefaultsWhenNothingIsPersisted() {
         let store = makeStore()
 
-        #expect(store.shortcut(for: .activateOverlay) == KeyboardShortcuts.defaultActivationShortcut)
-        #expect(store.shortcut(for: .scrollRight).displayName == "Command-Control-L")
+        #expect(
+            store.shortcut(for: .activateCursorMode)
+                == KeyboardShortcuts.defaultGlobalShortcuts[.activateCursorMode]
+        )
+        #expect(store.shortcut(for: .scrollRight).displayName == "Command-Option-Control-L")
     }
 
     @Test func persistsUpdatedShortcuts() {
@@ -19,14 +23,14 @@ struct ShortcutStoreTests {
             displayKey: "R"
         )
 
-        let result = store.update(.activateOverlay, to: shortcut)
+        let result = store.update(.activateCursorMode, to: shortcut)
 
         guard case .success = result else {
             Issue.record("Expected shortcut update to succeed")
             return
         }
 
-        #expect(store.shortcut(for: .activateOverlay) == shortcut)
+        #expect(store.shortcut(for: .activateCursorMode) == shortcut)
     }
 
     @Test func rejectsDuplicateShortcuts() {
@@ -47,7 +51,7 @@ struct ShortcutStoreTests {
             displayKey: "R"
         )
 
-        let result = store.update(.activateOverlay, to: shortcut)
+        let result = store.update(.activateCursorMode, to: shortcut)
 
         #expect(result == .failure(.missingPrimaryModifier))
     }
@@ -61,30 +65,46 @@ struct ShortcutStoreTests {
             displayKey: "R"
         )
 
-        _ = store.update(.activateOverlay, to: shortcut)
+        _ = store.update(.activateCursorMode, to: shortcut)
         _ = store.restoreDefaults()
 
-        #expect(store.shortcut(for: .activateOverlay) == KeyboardShortcuts.defaultActivationShortcut)
+        #expect(
+            store.shortcut(for: .activateCursorMode)
+                == KeyboardShortcuts.defaultGlobalShortcuts[.activateCursorMode]
+        )
     }
 
-    @Test func activationShortcutCanBeChangedBackToCommandShiftSpace() {
-        let store = makeStore()
-        let customShortcut = KeyboardShortcut(
-            keyCode: 15,
-            modifiers: [.command, .option],
-            keyEquivalent: "r",
-            displayKey: "R"
-        )
+    @Test func migratesLegacyShortcutStorageWithoutRestoringRemovedOverlayShortcut() throws {
+        let suiteName = "VimClickTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
 
-        _ = store.update(.activateOverlay, to: customShortcut)
-        let result = store.update(.activateOverlay, to: KeyboardShortcuts.defaultActivationShortcut)
-
-        guard case .success = result else {
-            Issue.record("Expected restoring Command-Shift-Space to succeed")
-            return
+        let legacyJSON = """
+        {
+          "shortcuts": [
+            "activateOverlay",
+            {
+              "keyCode": 49,
+              "displayKey": "Space",
+              "modifiers": 3,
+              "keyEquivalent": " "
+            },
+            "activateCursorMode",
+            {
+              "keyCode": 13,
+              "displayKey": "W",
+              "modifiers": 4,
+              "keyEquivalent": "w"
+            }
+          ]
         }
+        """
+        defaults.set(legacyJSON.data(using: .utf8)!, forKey: "VimClick.GlobalShortcuts.v3")
 
-        #expect(store.shortcut(for: .activateOverlay) == KeyboardShortcuts.defaultActivationShortcut)
+        let store = ShortcutStore(userDefaults: defaults)
+
+        #expect(store.shortcut(for: .activateCursorMode).displayName == "Option-W")
+        #expect(store.shortcut(for: .scrollDown).displayName == "Command-Option-Control-J")
     }
 
     private func makeStore() -> ShortcutStore {

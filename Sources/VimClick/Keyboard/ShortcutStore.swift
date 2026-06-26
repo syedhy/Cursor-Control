@@ -38,19 +38,24 @@ struct ShortcutAssignments: Codable, Equatable {
 final class ShortcutStore {
     private let userDefaults: UserDefaults
     private let storageKey: String
+    private let legacyStorageKey: String
 
     init(
         userDefaults: UserDefaults = .standard,
-        storageKey: String = "VimClick.GlobalShortcuts.v1"
+        storageKey: String = "VimClick.GlobalShortcuts.v4",
+        legacyStorageKey: String = "VimClick.GlobalShortcuts.v3"
     ) {
         self.userDefaults = userDefaults
         self.storageKey = storageKey
+        self.legacyStorageKey = legacyStorageKey
     }
 
     func load() -> ShortcutAssignments {
         guard let data = userDefaults.data(forKey: storageKey),
               let decoded = try? JSONDecoder().decode(ShortcutAssignments.self, from: data) else {
-            return ShortcutAssignments()
+            let migratedAssignments = migratedLegacyAssignments()
+            save(migratedAssignments)
+            return migratedAssignments
         }
 
         return decoded
@@ -111,5 +116,49 @@ final class ShortcutStore {
         }
 
         return .success(())
+    }
+
+    private func migratedLegacyAssignments() -> ShortcutAssignments {
+        guard let data = userDefaults.data(forKey: legacyStorageKey),
+              let decoded = try? JSONDecoder().decode(LegacyShortcutAssignments.self, from: data) else {
+            return ShortcutAssignments()
+        }
+
+        var shortcuts = KeyboardShortcuts.defaultGlobalShortcuts
+        for (identifier, shortcut) in decoded.all {
+            switch identifier {
+            case .activateCursorMode:
+                shortcuts[.activateCursorMode] = shortcut
+            case .scrollLeft:
+                shortcuts[.scrollLeft] = shortcut
+            case .scrollDown:
+                shortcuts[.scrollDown] = shortcut
+            case .scrollUp:
+                shortcuts[.scrollUp] = shortcut
+            case .scrollRight:
+                shortcuts[.scrollRight] = shortcut
+            case .activateOverlay:
+                continue
+            }
+        }
+
+        return ShortcutAssignments(shortcuts: shortcuts)
+    }
+}
+
+private enum LegacyShortcutIdentifier: String, Codable, Hashable {
+    case activateOverlay
+    case activateCursorMode
+    case scrollLeft
+    case scrollDown
+    case scrollUp
+    case scrollRight
+}
+
+private struct LegacyShortcutAssignments: Codable {
+    private var shortcuts: [LegacyShortcutIdentifier: KeyboardShortcut]
+
+    var all: [LegacyShortcutIdentifier: KeyboardShortcut] {
+        shortcuts
     }
 }
