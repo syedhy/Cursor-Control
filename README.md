@@ -5,8 +5,8 @@ on screen without taking your hands off the keyboard.
 
 > [!NOTE]
 > VimClick is under active development. The current codebase contains the
-> Phase 7 keyboard-driven clicking foundation, including the global activation
-> shortcut and centered precision zoom.
+> Phase 8 keyboard-driven clicking foundation, including global shortcut
+> configuration, centered precision zoom, and a native settings window.
 
 ## Goals
 
@@ -64,7 +64,7 @@ Opening `VimClick.app` adds a cursor icon to the macOS menu bar. It does not
 open a main application window or appear in the Dock. The current build provides:
 
 - **Activate VimClick** — opens a grid overlay on the display containing the cursor
-- **Settings…** — opens the placeholder settings window
+- **Settings…** — opens shortcut preferences
 - **Quit VimClick** — exits the application
 
 Press **Escape** to close the overlay.
@@ -86,7 +86,16 @@ clicking.
 Press **Return** to perform a left click at the center dot and close the
 overlay.
 
-The default global activation shortcut is **Command-Shift-Space**.
+The default global shortcuts are:
+
+- **Command-Shift-Space** — activate the overlay
+- **Command-Shift-Option-R** — reserved for cursor-control mode
+- **Command-Control-H/J/K/L** — reserved for left/down/up/right scrolling
+
+Settings supports recording new global shortcuts, rejecting duplicates,
+persisting changes, recovering from registration failures, and restoring
+defaults. Mode-local keys such as **H/J/K/L**, **Space**, **Return**, and
+**Escape** are fixed and are not exposed as settings.
 
 ## Accessibility permission
 
@@ -131,7 +140,7 @@ _A keyboard-driven usage demo will be added before the first release._
 - [x] Phase 5 — Recursive zoom system
 - [x] Phase 6 — Accessibility checks and mouse click simulation
 - [x] Phase 7 — Reliability, global activation, and centered precision zoom
-- [ ] Phase 8 — Settings and configurable shortcut architecture
+- [x] Phase 8 — Settings and configurable shortcut architecture
 - [ ] Phase 9 — Universal four-direction scrolling
 - [ ] Phase 10 — Vim cursor-control mode
 - [ ] Phase 11 — DMG and GitHub Releases preparation

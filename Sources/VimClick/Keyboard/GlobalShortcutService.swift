@@ -3,7 +3,6 @@ import Carbon
 import OSLog
 
 private let vimClickHotKeySignature: OSType = 0x56434C4B // "VCLK"
-private let activationHotKeyIdentifier: UInt32 = 1
 
 private func globalShortcutEventHandler(
     _ nextHandler: EventHandlerCallRef?,
@@ -13,8 +12,7 @@ private func globalShortcutEventHandler(
     guard let event,
           let context,
           let hotKeyID = hotKeyID(from: event),
-          hotKeyID.signature == vimClickHotKeySignature,
-          hotKeyID.id == activationHotKeyIdentifier else {
+          hotKeyID.signature == vimClickHotKeySignature else {
         return OSStatus(eventNotHandledErr)
     }
 
@@ -22,7 +20,7 @@ private func globalShortcutEventHandler(
         .fromOpaque(context)
         .takeUnretainedValue()
     Task { @MainActor [weak service] in
-        service?.handleActivation()
+        service?.handleHotKey(id: hotKeyID.id)
     }
     return noErr
 }
@@ -41,20 +39,34 @@ private func hotKeyID(from event: EventRef) -> EventHotKeyID? {
     return status == noErr ? hotKeyID : nil
 }
 
+struct GlobalShortcutRegistrationFailure: Error, Equatable {
+    let identifier: ShortcutIdentifier
+    let shortcut: KeyboardShortcut
+    let status: OSStatus
+
+    var message: String {
+        "Could not register \(identifier.title) (\(shortcut.displayName)). macOS returned \(status)."
+    }
+}
+
 @MainActor
 final class GlobalShortcutService {
     private var eventHandler: EventHandlerRef?
-    private var activationHotKey: EventHotKeyRef?
-    private var onActivate: (() -> Void)?
+    private var registeredHotKeys: [ShortcutIdentifier: EventHotKeyRef] = [:]
+    private var onShortcut: ((ShortcutIdentifier) -> Void)?
+    private var identifiersByHotKeyID: [UInt32: ShortcutIdentifier] = [:]
     private let logger = Logger(
         subsystem: AppConstants.bundleIdentifier,
         category: "GlobalShortcut"
     )
 
     @discardableResult
-    func registerActivationShortcut(onActivate: @escaping @MainActor () -> Void) -> Bool {
+    func registerShortcuts(
+        _ shortcuts: [ShortcutIdentifier: KeyboardShortcut],
+        onShortcut: @escaping @MainActor (ShortcutIdentifier) -> Void
+    ) -> Result<Void, GlobalShortcutRegistrationFailure> {
         unregisterAll()
-        self.onActivate = onActivate
+        self.onShortcut = onShortcut
 
         var eventType = EventTypeSpec(
             eventClass: OSType(kEventClassKeyboard),
@@ -73,56 +85,77 @@ final class GlobalShortcutService {
         guard handlerStatus == noErr else {
             logger.error("Could not install hotkey handler: \(handlerStatus)")
             unregisterAll()
-            return false
-        }
-
-        let hotKeyID = EventHotKeyID(
-            signature: vimClickHotKeySignature,
-            id: activationHotKeyIdentifier
-        )
-        let registrationStatus = RegisterEventHotKey(
-            KeyboardShortcuts.activationKeyCode,
-            carbonModifiers(from: KeyboardShortcuts.activationModifiers),
-            hotKeyID,
-            GetApplicationEventTarget(),
-            0,
-            &activationHotKey
-        )
-        guard registrationStatus == noErr else {
-            logger.error(
-                "Could not register \(KeyboardShortcuts.activationDisplayName): \(registrationStatus)"
+            let fallbackShortcut = KeyboardShortcuts.defaultActivationShortcut
+            return .failure(
+                GlobalShortcutRegistrationFailure(
+                    identifier: .activateOverlay,
+                    shortcut: fallbackShortcut,
+                    status: handlerStatus
+                )
             )
-            unregisterAll()
-            return false
         }
 
-        logger.notice("Registered \(KeyboardShortcuts.activationDisplayName)")
-        return true
+        for identifier in ShortcutIdentifier.allCases {
+            guard let shortcut = shortcuts[identifier] else {
+                continue
+            }
+
+            var hotKeyRef: EventHotKeyRef?
+            let hotKeyID = EventHotKeyID(
+                signature: vimClickHotKeySignature,
+                id: identifier.hotKeyID
+            )
+            let registrationStatus = RegisterEventHotKey(
+                shortcut.keyCode,
+                shortcut.modifiers.carbonFlags,
+                hotKeyID,
+                GetApplicationEventTarget(),
+                0,
+                &hotKeyRef
+            )
+
+            guard registrationStatus == noErr, let hotKeyRef else {
+                logger.error(
+                    "Could not register \(identifier.title) \(shortcut.displayName): \(registrationStatus)"
+                )
+                let failure = GlobalShortcutRegistrationFailure(
+                    identifier: identifier,
+                    shortcut: shortcut,
+                    status: registrationStatus
+                )
+                unregisterAll()
+                return .failure(failure)
+            }
+
+            registeredHotKeys[identifier] = hotKeyRef
+            identifiersByHotKeyID[identifier.hotKeyID] = identifier
+            logger.notice("Registered \(identifier.title): \(shortcut.displayName)")
+        }
+
+        return .success(())
     }
 
     func unregisterAll() {
-        if let activationHotKey {
-            UnregisterEventHotKey(activationHotKey)
-            self.activationHotKey = nil
+        for hotKey in registeredHotKeys.values {
+            UnregisterEventHotKey(hotKey)
         }
+        registeredHotKeys.removeAll()
+        identifiersByHotKeyID.removeAll()
+
         if let eventHandler {
             RemoveEventHandler(eventHandler)
             self.eventHandler = nil
         }
-        onActivate = nil
+        onShortcut = nil
     }
 
-    private func carbonModifiers(from modifiers: NSEvent.ModifierFlags) -> UInt32 {
-        var result: UInt32 = 0
-        if modifiers.contains(.command) { result |= UInt32(cmdKey) }
-        if modifiers.contains(.shift) { result |= UInt32(shiftKey) }
-        if modifiers.contains(.option) { result |= UInt32(optionKey) }
-        if modifiers.contains(.control) { result |= UInt32(controlKey) }
-        return result
-    }
+    fileprivate func handleHotKey(id: UInt32) {
+        guard let identifier = identifiersByHotKeyID[id] else {
+            logger.error("Received unknown hotkey id \(id)")
+            return
+        }
 
-    fileprivate func handleActivation() {
-        logger.notice("Received \(KeyboardShortcuts.activationDisplayName)")
-        onActivate?()
+        logger.notice("Received \(identifier.title)")
+        onShortcut?(identifier)
     }
 }

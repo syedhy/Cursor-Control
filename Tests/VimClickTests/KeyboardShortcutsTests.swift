@@ -61,10 +61,47 @@ struct KeyboardShortcutsTests {
     }
 
     @Test func activationShortcutHasTheExpectedDefault() {
-        #expect(KeyboardShortcuts.activationKeyCode == 49)
-        #expect(KeyboardShortcuts.activationModifiers == [.command, .shift])
-        #expect(KeyboardShortcuts.activationKeyEquivalent == " ")
-        #expect(KeyboardShortcuts.activationDisplayName == "Command-Shift-Space")
+        let shortcut = KeyboardShortcuts.defaultActivationShortcut
+
+        #expect(shortcut.keyCode == 49)
+        #expect(shortcut.modifiers == [.command, .shift])
+        #expect(shortcut.keyEquivalent == " ")
+        #expect(shortcut.displayName == "Command-Shift-Space")
+    }
+
+    @Test func futureGlobalShortcutsHaveCentralizedDefaults() {
+        #expect(
+            KeyboardShortcuts.defaultGlobalShortcuts[.activateCursorMode]?.displayName
+                == "Command-Shift-Option-R"
+        )
+        #expect(KeyboardShortcuts.defaultGlobalShortcuts[.scrollLeft]?.displayName == "Command-Control-H")
+        #expect(KeyboardShortcuts.defaultGlobalShortcuts[.scrollDown]?.displayName == "Command-Control-J")
+        #expect(KeyboardShortcuts.defaultGlobalShortcuts[.scrollUp]?.displayName == "Command-Control-K")
+        #expect(KeyboardShortcuts.defaultGlobalShortcuts[.scrollRight]?.displayName == "Command-Control-L")
+    }
+
+    @Test func keyboardShortcutRequiresPrimaryModifier() throws {
+        let plainKey = try event(character: "r", keyCode: 15, modifiers: [])
+        let shortcut = KeyboardShortcut(event: plainKey)
+
+        #expect(shortcut == nil)
+    }
+
+    @Test func keyboardShortcutCapturesDisplayNameFromEvent() throws {
+        let event = try event(character: "R", keyCode: 15, modifiers: [.command, .shift, .option])
+        let shortcut = try #require(KeyboardShortcut(event: event))
+
+        #expect(shortcut.keyCode == 15)
+        #expect(shortcut.keyEquivalent == "r")
+        #expect(shortcut.displayName == "Command-Shift-Option-R")
+    }
+
+    @Test func keyboardShortcutCapturesCommandShiftSpaceFromEvent() throws {
+        let event = try event(character: " ", keyCode: 49, modifiers: [.command, .shift])
+        let shortcut = try #require(KeyboardShortcut(event: event))
+
+        #expect(shortcut == KeyboardShortcuts.defaultActivationShortcut)
+        #expect(shortcut.displayName == "Command-Shift-Space")
     }
 
     private func event(

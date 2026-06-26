@@ -6,8 +6,10 @@ final class MenuBarController: NSObject {
     private let onActivate: () -> Void
     private let onOpenSettings: () -> Void
     private let onQuit: () -> Void
+    private var activateItem: NSMenuItem?
 
     init(
+        activationShortcut: KeyboardShortcut,
         onActivate: @escaping () -> Void,
         onOpenSettings: @escaping () -> Void,
         onQuit: @escaping () -> Void
@@ -20,7 +22,7 @@ final class MenuBarController: NSObject {
         super.init()
 
         configureStatusItem()
-        configureMenu()
+        configureMenu(activationShortcut: activationShortcut)
     }
 
     private func configureStatusItem() {
@@ -35,15 +37,21 @@ final class MenuBarController: NSObject {
         button.toolTip = AppConstants.appName
     }
 
-    private func configureMenu() {
+    func updateActivationShortcut(_ shortcut: KeyboardShortcut) {
+        activateItem?.keyEquivalent = shortcut.keyEquivalent
+        activateItem?.keyEquivalentModifierMask = shortcut.keyEquivalentModifierMask
+    }
+
+    private func configureMenu(activationShortcut: KeyboardShortcut) {
         let menu = NSMenu()
 
         let activateItem = menu.addItem(
             withTitle: "Activate VimClick",
             action: #selector(activate),
-            keyEquivalent: KeyboardShortcuts.activationKeyEquivalent
+            keyEquivalent: activationShortcut.keyEquivalent
         )
-        activateItem.keyEquivalentModifierMask = KeyboardShortcuts.activationModifiers
+        activateItem.keyEquivalentModifierMask = activationShortcut.keyEquivalentModifierMask
+        self.activateItem = activateItem
         menu.addItem(
             withTitle: "Settings…",
             action: #selector(openSettings),

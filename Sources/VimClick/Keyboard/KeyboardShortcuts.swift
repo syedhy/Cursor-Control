@@ -18,17 +18,63 @@ enum OverlayKeyboardMode: Equatable {
 }
 
 enum KeyboardShortcuts {
-    static let activationKeyCode: UInt32 = 49
-    static let activationModifiers: NSEvent.ModifierFlags = [.command, .shift]
-    static let activationKeyEquivalent = " "
-    static let activationDisplayName = "Command-Shift-Space"
-    static let cancelKeyCode: UInt16 = 53
-    static let zoomKeyCode: UInt16 = 49
-    static let clickKeyCodes: Set<UInt16> = [36, 76]
+    static let spaceKeyCode: UInt16 = 49
+    static let escapeKeyCode: UInt16 = 53
+    static let returnKeyCodes: Set<UInt16> = [36, 76]
+    static let cancelKeyCode = escapeKeyCode
+    static let zoomKeyCode = spaceKeyCode
+    static let clickKeyCodes = returnKeyCodes
     static let moveLeftCharacter: Character = "h"
     static let moveDownCharacter: Character = "j"
     static let moveUpCharacter: Character = "k"
     static let moveRightCharacter: Character = "l"
+    static let moveLeftKeyCode: UInt32 = 4
+    static let moveDownKeyCode: UInt32 = 38
+    static let moveUpKeyCode: UInt32 = 40
+    static let moveRightKeyCode: UInt32 = 37
+
+    static let defaultGlobalShortcuts: [ShortcutIdentifier: KeyboardShortcut] = [
+        .activateOverlay: KeyboardShortcut(
+            keyCode: UInt32(spaceKeyCode),
+            modifiers: [.command, .shift],
+            keyEquivalent: " ",
+            displayKey: "Space"
+        ),
+        .activateCursorMode: KeyboardShortcut(
+            keyCode: 15,
+            modifiers: [.command, .shift, .option],
+            keyEquivalent: "r",
+            displayKey: "R"
+        ),
+        .scrollLeft: KeyboardShortcut(
+            keyCode: moveLeftKeyCode,
+            modifiers: [.command, .control],
+            keyEquivalent: "h",
+            displayKey: "H"
+        ),
+        .scrollDown: KeyboardShortcut(
+            keyCode: moveDownKeyCode,
+            modifiers: [.command, .control],
+            keyEquivalent: "j",
+            displayKey: "J"
+        ),
+        .scrollUp: KeyboardShortcut(
+            keyCode: moveUpKeyCode,
+            modifiers: [.command, .control],
+            keyEquivalent: "k",
+            displayKey: "K"
+        ),
+        .scrollRight: KeyboardShortcut(
+            keyCode: moveRightKeyCode,
+            modifiers: [.command, .control],
+            keyEquivalent: "l",
+            displayKey: "L"
+        )
+    ]
+
+    static var defaultActivationShortcut: KeyboardShortcut {
+        defaultGlobalShortcuts[.activateOverlay]!
+    }
 
     static func command(
         for event: NSEvent,
