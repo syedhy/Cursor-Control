@@ -1,6 +1,10 @@
 import CoreGraphics
 import Foundation
 
+protocol MouseClicking {
+    func leftClick(at point: CGPoint) -> Bool
+}
+
 struct MouseClickService {
     func leftClick(at point: CGPoint) -> Bool {
         let eventSource = CGEventSource(stateID: .hidSystemState)
@@ -37,3 +41,5 @@ struct MouseClickService {
         return true
     }
 }
+
+extension MouseClickService: MouseClicking {}

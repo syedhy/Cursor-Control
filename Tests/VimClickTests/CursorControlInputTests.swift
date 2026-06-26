@@ -13,25 +13,14 @@ struct CursorControlInputTests {
         )
     }
 
-    @Test func textEntryModeLetsPlainVimKeysPassThrough() {
-        #expect(
-            CursorControlInput(
-                keyCode: KeyboardShortcuts.moveRightKeyCode,
-                modifiers: [],
-                isKeyDown: true,
-                captureMode: .textEntry
-            ) == nil
-        )
-    }
-
-    @Test func escapeResumesMovementFromTextEntry() {
+    @Test func escapeDoesNotExitCursorControlMovementMode() {
         #expect(
             CursorControlInput(
                 keyCode: UInt32(KeyboardShortcuts.escapeKeyCode),
                 modifiers: [],
                 isKeyDown: true,
-                captureMode: .textEntry
-            ) == .resumeMovement
+                captureMode: .movement
+            ) == nil
         )
     }
 }

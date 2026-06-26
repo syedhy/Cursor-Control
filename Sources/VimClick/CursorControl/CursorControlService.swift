@@ -9,7 +9,7 @@ final class CursorControlService {
     private let permissionService: any AccessibilityPermissionProviding
     private let permissionAlert: any AccessibilityPermissionAlerting
     private let cursorPositionService: any CursorPositionProviding
-    private let mouseClickService: MouseClickService
+    private let mouseClickService: any MouseClicking
     private let settingsProvider: () -> CursorSettings
     private var accessibilityGuidanceState = AccessibilityGuidanceState()
     private var heldDirections: Set<CursorMovementDirection> = []
@@ -26,7 +26,7 @@ final class CursorControlService {
         permissionService: any AccessibilityPermissionProviding = AccessibilityPermissionService(),
         permissionAlert: any AccessibilityPermissionAlerting = AccessibilityPermissionAlert(),
         cursorPositionService: any CursorPositionProviding = QuartzCursorPositionService(),
-        mouseClickService: MouseClickService = MouseClickService(),
+        mouseClickService: any MouseClicking = MouseClickService(),
         settingsProvider: @escaping () -> CursorSettings = { CursorSettings() }
     ) {
         self.permissionService = permissionService
@@ -90,12 +90,9 @@ final class CursorControlService {
                 stopMovement()
             }
         case .click:
-            performClickWithoutExiting()
-            enterTextEntryMode()
-        case .cancel:
-            stop()
-        case .resumeMovement:
-            resumeMovementMode()
+            if performClickWithoutExiting() {
+                stop()
+            }
         }
     }
 
@@ -161,30 +158,18 @@ final class CursorControlService {
         _ = cursorPositionService.moveCursor(to: nextPoint)
     }
 
-    private func performClickWithoutExiting() {
+    @discardableResult
+    private func performClickWithoutExiting() -> Bool {
         guard ensureAccessibilityPermission(),
               let currentLocation = cursorPositionService.currentLocation else {
-            return
+            return false
         }
 
         if !mouseClickService.leftClick(at: currentLocation) {
             permissionAlert.presentClickFailure()
+            return false
         }
-    }
 
-    private func enterTextEntryMode() {
-        stopMovement()
-        captureMode = .textEntry
-        onCaptureModeChanged?(.textEntry)
-        logger.notice("Cursor control mode paused for text entry")
-    }
-
-    private func resumeMovementMode() {
-        guard isActive else { return }
-
-        stopMovement()
-        captureMode = .movement
-        onCaptureModeChanged?(.movement)
-        logger.notice("Cursor control movement resumed")
+        return true
     }
 }

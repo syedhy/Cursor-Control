@@ -181,15 +181,6 @@ final class GlobalInputEventTap {
         guard isCursorModeActive, modifiers.isEmpty else { return nil }
 
         if keyCode == UInt32(KeyboardShortcuts.escapeKeyCode) {
-            guard isKeyDown else { return CursorInputHandling(input: nil) }
-            return CursorInputHandling(input:
-                cursorCaptureMode == .textEntry
-                    ? .resumeMovement
-                    : .cancel
-            )
-        }
-
-        if cursorCaptureMode == .textEntry {
             return nil
         }
 

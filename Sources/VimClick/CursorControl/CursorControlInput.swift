@@ -9,8 +9,6 @@ enum CursorControlInput: Equatable {
     case movementKeyDown(CursorMovementDirection)
     case movementKeyUp(CursorMovementDirection)
     case click
-    case cancel
-    case resumeMovement
 
     init?(
         keyCode: UInt32,
@@ -21,9 +19,7 @@ enum CursorControlInput: Equatable {
         guard modifiers.isEmpty else { return nil }
 
         if keyCode == UInt32(KeyboardShortcuts.escapeKeyCode) {
-            guard isKeyDown else { return nil }
-            self = captureMode == .textEntry ? .resumeMovement : .cancel
-            return
+            return nil
         }
 
         guard captureMode == .movement else { return nil }
@@ -44,7 +40,6 @@ enum CursorControlInput: Equatable {
 
 enum CursorControlCaptureMode: Equatable {
     case movement
-    case textEntry
 }
 
 extension CursorMovementDirection {
