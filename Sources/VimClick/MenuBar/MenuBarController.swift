@@ -61,12 +61,11 @@ final class MenuBarController: NSObject {
             return image
         }
 
-        if let image = NSImage(named: "VimClickStatusIcon") {
-            image.isTemplate = false
-            image.size = NSSize(
-                width: AppConstants.normalMenuBarIconSize,
-                height: AppConstants.normalMenuBarIconSize
-            )
+        if let image = NSImage(
+            systemSymbolName: "cursorarrow.click.2",
+            accessibilityDescription: AppConstants.appName
+        ) {
+            image.isTemplate = true
             return image
         }
 
