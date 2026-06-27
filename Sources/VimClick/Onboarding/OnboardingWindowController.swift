@@ -56,11 +56,11 @@ final class OnboardingWindowController: NSWindowController {
                 ),
                 instruction(
                     title: "2. Move and click",
-                    body: "Use H/J/K/L to move. Hold keys for acceleration. Press Return to left-click."
+                    body: "Use the configured movement keys, H/J/K/L by default. Hold keys for acceleration. Press Return to left-click."
                 ),
                 instruction(
-                    title: "3. Type normally after clicking a text field",
-                    body: "After pressing Return, VimClick pauses movement keys so H/J/K/L type normally. Press Escape to resume cursor movement."
+                    title: "3. Type normally in text fields",
+                    body: "Cursor mode stays active after every click. Toggle cursor mode off with your shortcut when you want to type normally, then toggle it back on when you want mouse control again."
                 ),
                 instruction(
                     title: "4. Scroll any app",
@@ -73,7 +73,7 @@ final class OnboardingWindowController: NSWindowController {
         steps.spacing = 14
 
         let settingsHint = NSTextField(
-            wrappingLabelWithString: "Open Settings to tune movement speed, acceleration, update rate, scroll distance, and shortcut assignments."
+            wrappingLabelWithString: "Open Settings to tune movement keys, movement speed, acceleration, update rate, scroll distance, and shortcut assignments."
         )
         settingsHint.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         settingsHint.textColor = .secondaryLabelColor

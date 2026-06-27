@@ -138,14 +138,21 @@ final class SettingsWindowController: NSWindowController {
     private let shortcutProvider: (ShortcutIdentifier) -> KeyboardShortcut
     private let scrollSettingsProvider: () -> ScrollSettings
     private let cursorSettingsProvider: () -> CursorSettings
+    private let cursorMovementBindingProvider: (CursorMovementDirection) -> KeyboardShortcut
     private let onShortcutChange: (ShortcutIdentifier, KeyboardShortcut) -> ShortcutUpdateResult
     private let onRestoreDefaults: () -> ShortcutUpdateResult
     private let onScrollSettingsChange: (ScrollSettings) -> Void
     private let onRestoreScrollSettingsDefaults: () -> ScrollSettings
     private let onCursorSettingsChange: (CursorSettings) -> Void
     private let onRestoreCursorSettingsDefaults: () -> CursorSettings
+    private let onCursorMovementBindingChange: (
+        CursorMovementDirection,
+        KeyboardShortcut
+    ) -> Result<CursorMovementBindings, CursorMovementBindingValidationError>
+    private let onRestoreCursorMovementBindingsDefaults: () -> CursorMovementBindings
     private let onRecordingStateChanged: (Bool) -> Void
     private var shortcutButtons: [ShortcutIdentifier: ShortcutRecorderButton] = [:]
+    private var cursorMovementButtons: [CursorMovementDirection: ShortcutRecorderButton] = [:]
     private var scrollControls: [ScrollSettingKey: NumericSettingControl] = [:]
     private var cursorControls: [CursorSettingKey: NumericSettingControl] = [:]
     private var recordingEventMonitor: Any?
@@ -156,27 +163,36 @@ final class SettingsWindowController: NSWindowController {
         shortcutProvider: @escaping (ShortcutIdentifier) -> KeyboardShortcut,
         scrollSettingsProvider: @escaping () -> ScrollSettings,
         cursorSettingsProvider: @escaping () -> CursorSettings,
+        cursorMovementBindingProvider: @escaping (CursorMovementDirection) -> KeyboardShortcut,
         onShortcutChange: @escaping (ShortcutIdentifier, KeyboardShortcut) -> ShortcutUpdateResult,
         onRestoreDefaults: @escaping () -> ShortcutUpdateResult,
         onScrollSettingsChange: @escaping (ScrollSettings) -> Void,
         onRestoreScrollSettingsDefaults: @escaping () -> ScrollSettings,
         onCursorSettingsChange: @escaping (CursorSettings) -> Void,
         onRestoreCursorSettingsDefaults: @escaping () -> CursorSettings,
+        onCursorMovementBindingChange: @escaping (
+            CursorMovementDirection,
+            KeyboardShortcut
+        ) -> Result<CursorMovementBindings, CursorMovementBindingValidationError>,
+        onRestoreCursorMovementBindingsDefaults: @escaping () -> CursorMovementBindings,
         onRecordingStateChanged: @escaping (Bool) -> Void
     ) {
         self.shortcutProvider = shortcutProvider
         self.scrollSettingsProvider = scrollSettingsProvider
         self.cursorSettingsProvider = cursorSettingsProvider
+        self.cursorMovementBindingProvider = cursorMovementBindingProvider
         self.onShortcutChange = onShortcutChange
         self.onRestoreDefaults = onRestoreDefaults
         self.onScrollSettingsChange = onScrollSettingsChange
         self.onRestoreScrollSettingsDefaults = onRestoreScrollSettingsDefaults
         self.onCursorSettingsChange = onCursorSettingsChange
         self.onRestoreCursorSettingsDefaults = onRestoreCursorSettingsDefaults
+        self.onCursorMovementBindingChange = onCursorMovementBindingChange
+        self.onRestoreCursorMovementBindingsDefaults = onRestoreCursorMovementBindingsDefaults
         self.onRecordingStateChanged = onRecordingStateChanged
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 760, height: 640),
+            contentRect: NSRect(x: 0, y: 0, width: 780, height: 720),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -197,6 +213,7 @@ final class SettingsWindowController: NSWindowController {
         refreshShortcutButtons()
         refreshScrollSettingsControls()
         refreshCursorSettingsControls()
+        refreshCursorMovementButtons()
         window.center()
         showWindow(nil)
         NSApp.activate(ignoringOtherApps: true)
@@ -269,7 +286,7 @@ final class SettingsWindowController: NSWindowController {
 
             documentView.widthAnchor.constraint(equalTo: scrollView.contentView.widthAnchor),
             tabView.widthAnchor.constraint(equalTo: stack.widthAnchor),
-            tabView.heightAnchor.constraint(equalToConstant: 440),
+            tabView.heightAnchor.constraint(equalToConstant: 560),
 
             stack.leadingAnchor.constraint(equalTo: documentView.leadingAnchor, constant: 28),
             stack.trailingAnchor.constraint(equalTo: documentView.trailingAnchor, constant: -28),
@@ -280,6 +297,7 @@ final class SettingsWindowController: NSWindowController {
         refreshShortcutButtons()
         refreshScrollSettingsControls()
         refreshCursorSettingsControls()
+        refreshCursorMovementButtons()
         return container
     }
 
@@ -314,7 +332,7 @@ final class SettingsWindowController: NSWindowController {
     private func makeShortcutsSection() -> NSView {
         let sectionLabel = sectionDescription(
             title: "Shortcuts",
-            body: "Record global shortcuts here. Mode-local controls like H/J/K/L, Return, Space, and Escape remain fixed."
+            body: "Record global shortcuts here. Cursor movement keys are configured separately in Cursor Control."
         )
 
         let shortcutStack = NSStackView()
@@ -480,6 +498,22 @@ final class SettingsWindowController: NSWindowController {
             stack.addArrangedSubview(control.row(title: row.1, description: row.2))
         }
 
+        let bindingDescription = sectionDescription(
+            title: "Movement Keys",
+            body: "Choose the keys VimClick captures while cursor control mode is active. Plain keys like H/J/K/L and modified keys like Shift-H are both allowed."
+        )
+        stack.addArrangedSubview(bindingDescription)
+
+        let bindingStack = NSStackView()
+        bindingStack.orientation = .vertical
+        bindingStack.alignment = .leading
+        bindingStack.spacing = 12
+
+        for direction in CursorMovementDirection.allCases {
+            bindingStack.addArrangedSubview(makeCursorMovementRow(for: direction))
+        }
+        stack.addArrangedSubview(bindingStack)
+
         return stack
     }
 
@@ -535,12 +569,51 @@ final class SettingsWindowController: NSWindowController {
         return row
     }
 
+    private func makeCursorMovementRow(for direction: CursorMovementDirection) -> NSView {
+        let titleLabel = NSTextField(labelWithString: direction.settingsTitle)
+        titleLabel.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .medium)
+
+        let descriptionLabel = NSTextField(wrappingLabelWithString: direction.settingsDescription)
+        descriptionLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        descriptionLabel.textColor = .secondaryLabelColor
+        descriptionLabel.maximumNumberOfLines = 0
+
+        let labelStack = NSStackView(views: [titleLabel, descriptionLabel])
+        labelStack.orientation = .vertical
+        labelStack.alignment = .leading
+        labelStack.spacing = 3
+
+        let button = ShortcutRecorderButton(cursorMovementDirection: direction)
+        button.target = self
+        button.action = #selector(beginShortcutRecording(_:))
+        button.widthAnchor.constraint(greaterThanOrEqualToConstant: 180).isActive = true
+        button.onCapturedShortcut = { [weak self, weak button] shortcut in
+            guard let self, let button else { return }
+            self.finishShortcutRecording(button, shortcut: shortcut)
+        }
+        button.onCancelledRecording = { [weak self] in
+            self?.cancelShortcutRecording()
+        }
+        cursorMovementButtons[direction] = button
+
+        let row = NSStackView(views: [labelStack, button])
+        row.orientation = .horizontal
+        row.alignment = .centerY
+        row.spacing = 18
+        row.translatesAutoresizingMaskIntoConstraints = false
+        labelStack.widthAnchor.constraint(greaterThanOrEqualToConstant: 360).isActive = true
+        return row
+    }
+
     @objc private func beginShortcutRecording(_ sender: ShortcutRecorderButton) {
         for button in shortcutButtons.values where button !== sender && button.isRecordingShortcut {
             button.cancelRecording()
         }
+        for button in cursorMovementButtons.values where button !== sender && button.isRecordingShortcut {
+            button.cancelRecording()
+        }
 
-        showMessage("Press the new shortcut for \(sender.shortcutIdentifier.title), or Esc to cancel.", isError: false)
+        showMessage("Press the new key for \(sender.recorderTarget.title), or Esc to cancel.", isError: false)
         onRecordingStateChanged(true)
         sender.beginRecording()
         startRecordingEventMonitor(for: sender)
@@ -552,19 +625,49 @@ final class SettingsWindowController: NSWindowController {
     ) {
         stopRecordingEventMonitor()
 
-        let identifier = button.shortcutIdentifier
+        switch button.recorderTarget {
+        case .globalShortcut(let identifier):
+            finishGlobalShortcutRecording(button, identifier: identifier, shortcut: shortcut)
+        case .cursorMovement(let direction):
+            finishCursorMovementRecording(button, direction: direction, shortcut: shortcut)
+        }
+    }
+
+    private func finishGlobalShortcutRecording(
+        _ button: ShortcutRecorderButton,
+        identifier: ShortcutIdentifier,
+        shortcut: KeyboardShortcut
+    ) {
         let result = onShortcutChange(identifier, shortcut)
         refreshShortcutButtons()
         button.finishRecording(displayTitle: shortcutProvider(identifier).displayName)
+        onRecordingStateChanged(false)
 
         switch result {
         case .success:
             showMessage("Updated \(identifier.title) to \(shortcut.displayName).", isError: false)
         case .validationFailure(let message):
-            onRecordingStateChanged(false)
             showMessage(message, isError: true)
         case .registrationFailure(let message):
             showMessage(message, isError: true)
+        }
+    }
+
+    private func finishCursorMovementRecording(
+        _ button: ShortcutRecorderButton,
+        direction: CursorMovementDirection,
+        shortcut: KeyboardShortcut
+    ) {
+        let result = onCursorMovementBindingChange(direction, shortcut)
+        refreshCursorMovementButtons()
+        button.finishRecording(displayTitle: cursorMovementBindingProvider(direction).displayName)
+        onRecordingStateChanged(false)
+
+        switch result {
+        case .success:
+            showMessage("Updated \(direction.settingsTitle.lowercased()) to \(shortcut.displayName).", isError: false)
+        case .failure(let error):
+            showMessage(error.localizedDescription, isError: true)
         }
     }
 
@@ -572,9 +675,11 @@ final class SettingsWindowController: NSWindowController {
         let result = onRestoreDefaults()
         let scrollSettings = onRestoreScrollSettingsDefaults()
         let cursorSettings = onRestoreCursorSettingsDefaults()
+        _ = onRestoreCursorMovementBindingsDefaults()
         refreshShortcutButtons()
         refreshScrollSettingsControls(with: scrollSettings)
         refreshCursorSettingsControls(with: cursorSettings)
+        refreshCursorMovementButtons()
 
         switch result {
         case .success:
@@ -588,6 +693,13 @@ final class SettingsWindowController: NSWindowController {
         for (identifier, button) in shortcutButtons {
             guard !button.isRecordingShortcut else { continue }
             button.title = shortcutProvider(identifier).displayName
+        }
+    }
+
+    private func refreshCursorMovementButtons() {
+        for (direction, button) in cursorMovementButtons {
+            guard !button.isRecordingShortcut else { continue }
+            button.title = cursorMovementBindingProvider(direction).displayName
         }
     }
 
@@ -661,7 +773,10 @@ final class SettingsWindowController: NSWindowController {
                 return nil
             }
 
-            guard let shortcut = KeyboardShortcut(event: event) else {
+            guard let shortcut = KeyboardShortcut(
+                event: event,
+                requiresPrimaryModifier: button.recorderTarget.requiresPrimaryModifier
+            ) else {
                 NSSound.beep()
                 return nil
             }

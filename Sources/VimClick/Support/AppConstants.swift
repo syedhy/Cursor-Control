@@ -16,4 +16,12 @@ enum AppConstants {
     static let defaultCursorMaximumSpeed = 30.0
     static let defaultCursorAccelerationPerFrame = 1.0
     static let defaultCursorFrameRate = 60.0
+    static let cursorModeIndicatorDotSize = 5.2
+    static let cursorModeIndicatorHaloSize = 19.0
+    static let cursorModeIndicatorOffsetX = 14.0
+    static let cursorModeIndicatorOffsetY = -15.0
+    static let cursorModeIndicatorTrailLength = 10
+    static let cursorModeIndicatorTrailMaxLength = 32.0
+    static let cursorModeIndicatorFrameRate = 60.0
+    static let normalMenuBarIconSize = 18.0
 }

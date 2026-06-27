@@ -13,6 +13,39 @@ struct CursorControlInputTests {
         )
     }
 
+    @Test func movementModeUsesCustomMovementBindings() {
+        let bindings = CursorMovementBindings(
+            left: KeyboardShortcut(
+                keyCode: 0,
+                modifiers: [.shift],
+                keyEquivalent: "a",
+                displayKey: "A"
+            ),
+            down: CursorMovementBindings().down,
+            up: CursorMovementBindings().up,
+            right: CursorMovementBindings().right
+        )
+
+        #expect(
+            CursorControlInput(
+                keyCode: 0,
+                modifiers: [.shift],
+                isKeyDown: true,
+                captureMode: .movement,
+                movementBindings: bindings
+            ) == .movementKeyDown(.left)
+        )
+        #expect(
+            CursorControlInput(
+                keyCode: KeyboardShortcuts.moveLeftKeyCode,
+                modifiers: [],
+                isKeyDown: true,
+                captureMode: .movement,
+                movementBindings: bindings
+            ) == nil
+        )
+    }
+
     @Test func escapeDoesNotExitCursorControlMovementMode() {
         #expect(
             CursorControlInput(

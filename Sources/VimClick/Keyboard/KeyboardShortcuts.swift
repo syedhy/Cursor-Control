@@ -40,4 +40,31 @@ enum KeyboardShortcuts {
             displayKey: "L"
         )
     ]
+
+    static let defaultCursorMovementBindings = CursorMovementBindings(
+        left: KeyboardShortcut(
+            keyCode: moveLeftKeyCode,
+            modifiers: [],
+            keyEquivalent: "h",
+            displayKey: "H"
+        ),
+        down: KeyboardShortcut(
+            keyCode: moveDownKeyCode,
+            modifiers: [],
+            keyEquivalent: "j",
+            displayKey: "J"
+        ),
+        up: KeyboardShortcut(
+            keyCode: moveUpKeyCode,
+            modifiers: [],
+            keyEquivalent: "k",
+            displayKey: "K"
+        ),
+        right: KeyboardShortcut(
+            keyCode: moveRightKeyCode,
+            modifiers: [],
+            keyEquivalent: "l",
+            displayKey: "L"
+        )
+    )
 }

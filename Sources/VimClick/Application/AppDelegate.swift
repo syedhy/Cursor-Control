@@ -9,6 +9,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var scrollService: ScrollService?
     private var scrollSettingsStore: ScrollSettingsStore?
     private var cursorSettingsStore: CursorSettingsStore?
+    private var cursorMovementBindingStore: CursorMovementBindingStore?
+    private var cursorModeIndicatorController: CursorModeIndicatorController?
     private var settingsWindowController: SettingsWindowController?
     private var shortcutCoordinator: ShortcutCoordinator?
     private let logger = Logger(
@@ -23,10 +25,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.scrollService = scrollService
         let cursorSettingsStore = CursorSettingsStore()
         self.cursorSettingsStore = cursorSettingsStore
+        let cursorMovementBindingStore = CursorMovementBindingStore()
+        self.cursorMovementBindingStore = cursorMovementBindingStore
         let cursorControlService = CursorControlService(
             settingsProvider: { cursorSettingsStore.load() }
         )
         self.cursorControlService = cursorControlService
+        let cursorModeIndicatorController = CursorModeIndicatorController()
+        self.cursorModeIndicatorController = cursorModeIndicatorController
 
         let shortcutCoordinator = ShortcutCoordinator()
         self.shortcutCoordinator = shortcutCoordinator
@@ -50,12 +56,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.menuBarController = menuBarController
 
         cursorControlService.onActiveStateChanged = {
-            [weak menuBarController, weak shortcutCoordinator] isActive in
+            [weak menuBarController, weak shortcutCoordinator, weak cursorModeIndicatorController] isActive in
             shortcutCoordinator?.setCursorModeActive(isActive)
             menuBarController?.setCursorModeActive(isActive)
+            if isActive {
+                cursorModeIndicatorController?.show()
+            } else {
+                cursorModeIndicatorController?.hide()
+            }
         }
         cursorControlService.onCaptureModeChanged = { [weak shortcutCoordinator] captureMode in
             shortcutCoordinator?.setCursorCaptureMode(captureMode)
+        }
+        cursorControlService.onCursorMoved = { [weak cursorModeIndicatorController] point in
+            cursorModeIndicatorController?.update(toQuartzCursorLocation: point)
         }
 
         let settingsWindowController = SettingsWindowController(
@@ -68,6 +82,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             },
             cursorSettingsProvider: { [weak cursorSettingsStore] in
                 cursorSettingsStore?.load() ?? CursorSettings()
+            },
+            cursorMovementBindingProvider: { [weak cursorMovementBindingStore] direction in
+                cursorMovementBindingStore?.shortcut(for: direction)
+                    ?? CursorMovementBindings()[direction]
             },
             onShortcutChange: { [weak shortcutCoordinator, weak menuBarController] identifier, shortcut in
                 guard let shortcutCoordinator else {
@@ -105,6 +123,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             onRestoreCursorSettingsDefaults: { [weak cursorSettingsStore] in
                 cursorSettingsStore?.restoreDefaults() ?? CursorSettings()
             },
+            onCursorMovementBindingChange: {
+                [weak cursorMovementBindingStore, weak shortcutCoordinator] direction, shortcut in
+                guard let cursorMovementBindingStore else {
+                    return .failure(.unavailable)
+                }
+
+                let result = cursorMovementBindingStore.update(direction, to: shortcut)
+                if case .success(let bindings) = result {
+                    shortcutCoordinator?.updateCursorMovementBindings(bindings)
+                }
+                return result
+            },
+            onRestoreCursorMovementBindingsDefaults: {
+                [weak cursorMovementBindingStore, weak shortcutCoordinator] in
+                let bindings = cursorMovementBindingStore?.restoreDefaults()
+                    ?? CursorMovementBindings()
+                shortcutCoordinator?.updateCursorMovementBindings(bindings)
+                return bindings
+            },
             onRecordingStateChanged: { [weak shortcutCoordinator] isRecording in
                 if isRecording {
                     shortcutCoordinator?.suspendRegistrations()
@@ -133,6 +170,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     self?.scroll(.right, repeatCount: repeatCount)
                 }
             ],
+            cursorMovementBindings: cursorMovementBindingStore.load(),
             onCursorInput: { [weak cursorControlService] input in
                 cursorControlService?.handle(input)
             },

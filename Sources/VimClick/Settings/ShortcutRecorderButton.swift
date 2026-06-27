@@ -1,8 +1,31 @@
 import AppKit
 
+enum ShortcutRecorderTarget: Equatable, Hashable {
+    case globalShortcut(ShortcutIdentifier)
+    case cursorMovement(CursorMovementDirection)
+
+    var title: String {
+        switch self {
+        case .globalShortcut(let identifier):
+            return identifier.title
+        case .cursorMovement(let direction):
+            return direction.settingsTitle
+        }
+    }
+
+    var requiresPrimaryModifier: Bool {
+        switch self {
+        case .globalShortcut:
+            return true
+        case .cursorMovement:
+            return false
+        }
+    }
+}
+
 @MainActor
 final class ShortcutRecorderButton: NSButton {
-    let shortcutIdentifier: ShortcutIdentifier
+    let recorderTarget: ShortcutRecorderTarget
     var onCapturedShortcut: ((KeyboardShortcut) -> Void)?
     var onCancelledRecording: (() -> Void)?
 
@@ -10,8 +33,18 @@ final class ShortcutRecorderButton: NSButton {
     private(set) var isRecordingShortcut = false
 
     init(shortcutIdentifier: ShortcutIdentifier) {
-        self.shortcutIdentifier = shortcutIdentifier
+        self.recorderTarget = .globalShortcut(shortcutIdentifier)
         super.init(frame: .zero)
+        configure()
+    }
+
+    init(cursorMovementDirection: CursorMovementDirection) {
+        self.recorderTarget = .cursorMovement(cursorMovementDirection)
+        super.init(frame: .zero)
+        configure()
+    }
+
+    private func configure() {
         setButtonType(.momentaryPushIn)
         bezelStyle = .rounded
         controlSize = .regular
@@ -60,7 +93,10 @@ final class ShortcutRecorderButton: NSButton {
             return
         }
 
-        guard let shortcut = KeyboardShortcut(event: event) else {
+        guard let shortcut = KeyboardShortcut(
+            event: event,
+            requiresPrimaryModifier: recorderTarget.requiresPrimaryModifier
+        ) else {
             NSSound.beep()
             return
         }

@@ -6,7 +6,7 @@ import Testing
 struct CursorControlServiceTests {
     private let clickLocation = CGPoint(x: 300, y: 220)
 
-    @Test func successfulClickStopsCursorControlSoFocusedAppCanReceiveTyping() {
+    @Test func successfulClickKeepsCursorControlActive() {
         let mouseClickService = SpyMouseClickService()
         let service = makeService(mouseClickService: mouseClickService)
         var activeStateChanges: [Bool] = []
@@ -15,10 +15,10 @@ struct CursorControlServiceTests {
         service.start()
         service.handle(.click)
 
-        #expect(!service.isActive)
+        #expect(service.isActive)
         #expect(service.captureMode == .movement)
         #expect(mouseClickService.clickedPoints == [clickLocation])
-        #expect(activeStateChanges == [true, false])
+        #expect(activeStateChanges == [true])
     }
 
     @Test func failedClickKeepsCursorControlActive() {
@@ -36,6 +36,23 @@ struct CursorControlServiceTests {
         #expect(service.isActive)
         #expect(service.captureMode == .movement)
         #expect(alert.clickFailureCount == 1)
+    }
+
+    @Test func successfulMovementReportsMovedCursorPoint() {
+        let cursorPositionService = FakeCursorPositionService(
+            currentLocation: clickLocation,
+            currentDisplayBounds: CGRect(x: 0, y: 0, width: 1200, height: 800)
+        )
+        let service = makeService(cursorPositionService: cursorPositionService)
+        var movedPoints: [CGPoint] = []
+        service.onCursorMoved = { movedPoints.append($0) }
+
+        service.start()
+        service.handle(.movementKeyDown(.right))
+
+        #expect(movedPoints == cursorPositionService.movedPoints)
+        #expect(movedPoints.count == 1)
+        #expect(movedPoints.first?.x ?? 0 > clickLocation.x)
     }
 
     private func makeService(

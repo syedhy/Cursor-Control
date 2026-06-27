@@ -31,12 +31,7 @@ final class MenuBarController: NSObject {
     private func configureStatusItem() {
         guard let button = statusItem.button else { return }
 
-        let image = NSImage(
-            systemSymbolName: "cursorarrow.motionlines",
-            accessibilityDescription: AppConstants.appName
-        )
-        image?.isTemplate = true
-        button.image = image
+        button.image = Self.statusImage(isCursorModeActive: false)
         button.toolTip = AppConstants.appName
     }
 
@@ -50,18 +45,37 @@ final class MenuBarController: NSObject {
         cursorModeItem?.title = isActive ? "Exit Cursor Control Mode" : "Cursor Control Mode"
         guard let button = statusItem.button else { return }
 
-        let symbolName = isActive ? "cursorarrow.rays" : "cursorarrow.motionlines"
-        let image = NSImage(
-            systemSymbolName: symbolName,
-            accessibilityDescription: isActive
-                ? "VimClick cursor control mode active"
-                : AppConstants.appName
-        )
-        image?.isTemplate = true
-        button.image = image
+        button.image = Self.statusImage(isCursorModeActive: isActive)
         button.toolTip = isActive
             ? "VimClick Cursor Control Mode"
             : AppConstants.appName
+    }
+
+    private static func statusImage(isCursorModeActive: Bool) -> NSImage? {
+        if isCursorModeActive {
+            let image = NSImage(
+                systemSymbolName: "cursorarrow.motionlines",
+                accessibilityDescription: "VimClick cursor control mode active"
+            )
+            image?.isTemplate = true
+            return image
+        }
+
+        if let image = NSImage(named: "VimClickStatusIcon") {
+            image.isTemplate = false
+            image.size = NSSize(
+                width: AppConstants.normalMenuBarIconSize,
+                height: AppConstants.normalMenuBarIconSize
+            )
+            return image
+        }
+
+        let fallback = NSImage(
+            systemSymbolName: "command.square",
+            accessibilityDescription: AppConstants.appName
+        )
+        fallback?.isTemplate = true
+        return fallback
     }
 
     private func configureMenu(cursorModeShortcut: KeyboardShortcut) {

@@ -11,8 +11,10 @@ DIST_DIR="$ROOT_DIR/dist"
 APP_BUNDLE="$DIST_DIR/$APP_NAME.app"
 APP_CONTENTS="$APP_BUNDLE/Contents"
 APP_MACOS="$APP_CONTENTS/MacOS"
+APP_RESOURCES="$APP_CONTENTS/Resources"
 APP_BINARY="$APP_MACOS/$APP_NAME"
 INFO_PLIST="$APP_CONTENTS/Info.plist"
+SOURCE_RESOURCES="$ROOT_DIR/Sources/VimClick/Resources"
 
 cd "$ROOT_DIR"
 if pgrep -x "$APP_NAME" >/dev/null 2>&1; then
@@ -35,8 +37,12 @@ BUILD_BINARY="$(swift build --show-bin-path)/$APP_NAME"
 
 rm -rf "$APP_BUNDLE"
 mkdir -p "$APP_MACOS"
+mkdir -p "$APP_RESOURCES"
 cp "$BUILD_BINARY" "$APP_BINARY"
 chmod +x "$APP_BINARY"
+if [ -d "$SOURCE_RESOURCES" ]; then
+  cp -R "$SOURCE_RESOURCES/." "$APP_RESOURCES/"
+fi
 
 cat >"$INFO_PLIST" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -49,6 +55,10 @@ cat >"$INFO_PLIST" <<PLIST
   <string>$BUNDLE_ID</string>
   <key>CFBundleName</key>
   <string>$APP_NAME</string>
+  <key>CFBundleIconFile</key>
+  <string>VimClickIcon</string>
+  <key>CFBundleIconName</key>
+  <string>VimClickIcon</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>LSMinimumSystemVersion</key>

@@ -5,6 +5,7 @@ import OSLog
 final class CursorControlService {
     var onActiveStateChanged: ((Bool) -> Void)?
     var onCaptureModeChanged: ((CursorControlCaptureMode) -> Void)?
+    var onCursorMoved: ((CGPoint) -> Void)?
 
     private let permissionService: any AccessibilityPermissionProviding
     private let permissionAlert: any AccessibilityPermissionAlerting
@@ -90,9 +91,7 @@ final class CursorControlService {
                 stopMovement()
             }
         case .click:
-            if performClickWithoutExiting() {
-                stop()
-            }
+            performClickWithoutExiting()
         }
     }
 
@@ -155,7 +154,9 @@ final class CursorControlService {
             settings: settings
         )
         movementTick += 1
-        _ = cursorPositionService.moveCursor(to: nextPoint)
+        if cursorPositionService.moveCursor(to: nextPoint) {
+            onCursorMoved?(nextPoint)
+        }
     }
 
     @discardableResult

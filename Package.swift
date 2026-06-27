@@ -13,7 +13,10 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "VimClick",
-            path: "Sources/VimClick"
+            path: "Sources/VimClick",
+            resources: [
+                .copy("Resources")
+            ]
         ),
         .testTarget(
             name: "VimClickTests",

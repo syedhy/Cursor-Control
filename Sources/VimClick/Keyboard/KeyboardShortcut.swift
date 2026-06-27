@@ -18,9 +18,10 @@ struct KeyboardShortcut: Codable, Equatable, Hashable {
         self.displayKey = displayKey
     }
 
-    init?(event: NSEvent) {
+    init?(event: NSEvent, requiresPrimaryModifier: Bool = true) {
         let modifiers = ShortcutModifiers(eventModifiers: event.modifierFlags)
-        guard !modifiers.intersection([.command, .control, .option]).isEmpty else {
+        if requiresPrimaryModifier,
+           modifiers.intersection([.command, .control, .option]).isEmpty {
             return nil
         }
 

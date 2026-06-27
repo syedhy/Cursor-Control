@@ -28,6 +28,7 @@ final class GlobalInputEventTap {
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
     private var shortcuts: [ShortcutIdentifier: KeyboardShortcut] = [:]
+    private var cursorMovementBindings = CursorMovementBindings()
     private var onShortcut: (@MainActor (ShortcutIdentifier, Int) -> Void)?
     private var onCursorInput: ((CursorControlInput) -> Void)?
     private var onTapDisabled: (() -> Void)?
@@ -43,12 +44,14 @@ final class GlobalInputEventTap {
     @discardableResult
     func start(
         shortcuts: [ShortcutIdentifier: KeyboardShortcut],
+        cursorMovementBindings: CursorMovementBindings,
         onShortcut: @escaping @MainActor (ShortcutIdentifier, Int) -> Void,
         onCursorInput: @escaping (CursorControlInput) -> Void,
         onTapDisabled: @escaping () -> Void
     ) -> Bool {
         stop()
         self.shortcuts = shortcuts
+        self.cursorMovementBindings = cursorMovementBindings
         self.onShortcut = onShortcut
         self.onCursorInput = onCursorInput
         self.onTapDisabled = onTapDisabled
@@ -116,6 +119,10 @@ final class GlobalInputEventTap {
         cursorCaptureMode = captureMode
     }
 
+    func setCursorMovementBindings(_ bindings: CursorMovementBindings) {
+        cursorMovementBindings = bindings
+    }
+
     fileprivate func handle(
         type: CGEventType,
         event: CGEvent
@@ -178,17 +185,21 @@ final class GlobalInputEventTap {
         modifiers: ShortcutModifiers,
         isKeyDown: Bool
     ) -> CursorInputHandling? {
-        guard isCursorModeActive, modifiers.isEmpty else { return nil }
+        guard isCursorModeActive else { return nil }
 
         if keyCode == UInt32(KeyboardShortcuts.escapeKeyCode) {
             return nil
         }
 
         if KeyboardShortcuts.returnKeyCodes.contains(UInt16(keyCode)) {
+            guard modifiers.isEmpty else { return nil }
             return CursorInputHandling(input: isKeyDown ? .click : nil)
         }
 
-        guard let direction = CursorMovementDirection(keyCode: keyCode) else {
+        guard let direction = cursorMovementBindings.direction(
+            for: keyCode,
+            modifiers: modifiers
+        ) else {
             return nil
         }
 

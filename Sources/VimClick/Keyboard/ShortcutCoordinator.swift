@@ -21,6 +21,7 @@ final class ShortcutCoordinator {
     private var onInputTapDisabled: () -> Void = {}
     private var isCursorModeActive = false
     private var cursorCaptureMode: CursorControlCaptureMode = .movement
+    private var cursorMovementBindings = CursorMovementBindings()
 
     init(
         store: ShortcutStore = ShortcutStore(),
@@ -34,10 +35,12 @@ final class ShortcutCoordinator {
 
     func start(
         handlers: [ShortcutIdentifier: @MainActor (Int) -> Void],
+        cursorMovementBindings: CursorMovementBindings,
         onCursorInput: @escaping (CursorControlInput) -> Void,
         onInputTapDisabled: @escaping () -> Void
     ) -> ShortcutUpdateResult {
         self.handlers = handlers
+        self.cursorMovementBindings = cursorMovementBindings
         self.onCursorInput = onCursorInput
         self.onInputTapDisabled = onInputTapDisabled
         return applyCurrentAssignments()
@@ -108,6 +111,11 @@ final class ShortcutCoordinator {
         inputEventTap.setCursorCaptureMode(captureMode)
     }
 
+    func updateCursorMovementBindings(_ bindings: CursorMovementBindings) {
+        cursorMovementBindings = bindings
+        inputEventTap.setCursorMovementBindings(bindings)
+    }
+
     private func applyCurrentAssignments() -> ShortcutUpdateResult {
         let assignments = store.load().all
         let result = service.registerShortcuts(assignments) { [weak self] identifier in
@@ -122,13 +130,19 @@ final class ShortcutCoordinator {
             return .registrationFailure(failure.message)
         }
 
-        if !inputEventTap.start(shortcuts: assignments, onShortcut: { [weak self] identifier, repeatCount in
-            self?.handleShortcut(identifier, repeatCount: repeatCount)
-        }, onCursorInput: { [weak self] input in
-            self?.onCursorInput(input)
-        }, onTapDisabled: { [weak self] in
-            self?.onInputTapDisabled()
-        }) {
+        if !inputEventTap.start(
+            shortcuts: assignments,
+            cursorMovementBindings: cursorMovementBindings,
+            onShortcut: { [weak self] identifier, repeatCount in
+                self?.handleShortcut(identifier, repeatCount: repeatCount)
+            },
+            onCursorInput: { [weak self] input in
+                self?.onCursorInput(input)
+            },
+            onTapDisabled: { [weak self] in
+                self?.onInputTapDisabled()
+            }
+        ) {
             logger.error("Global input event tap was unavailable; scroll shortcuts may not work until Accessibility permission is granted.")
         }
         inputEventTap.setCursorModeActive(
