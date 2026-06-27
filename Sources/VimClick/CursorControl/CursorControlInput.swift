@@ -8,7 +8,8 @@ enum CursorMovementDirection: CaseIterable, Hashable {
 enum CursorControlInput: Equatable {
     case movementKeyDown(CursorMovementDirection)
     case movementKeyUp(CursorMovementDirection)
-    case click
+    case leftClick
+    case rightClick
 
     init?(
         keyCode: UInt32,
@@ -24,9 +25,19 @@ enum CursorControlInput: Equatable {
         guard captureMode == .movement else { return nil }
 
         if KeyboardShortcuts.returnKeyCodes.contains(UInt16(keyCode)) {
-            guard modifiers.isEmpty, isKeyDown else { return nil }
-            self = .click
-            return
+            guard isKeyDown else { return nil }
+
+            if modifiers.isEmpty {
+                self = .leftClick
+                return
+            }
+
+            if modifiers == [.shift] || modifiers == [.control] {
+                self = .rightClick
+                return
+            }
+
+            return nil
         }
 
         guard let direction = movementBindings.direction(

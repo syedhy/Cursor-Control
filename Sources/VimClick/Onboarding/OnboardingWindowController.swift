@@ -51,20 +51,24 @@ final class OnboardingWindowController: NSWindowController {
         let steps = NSStackView(
             views: [
                 instruction(
-                    title: "1. Enter cursor mode",
-                    body: "Use the Cursor Control Mode shortcut from Settings. The menu bar icon changes while the mode is active."
+                    title: "1. Turn on cursor control",
+                    body: "Press Option-W by default, or use the shortcut you set in Settings. The menu bar icon changes while cursor control is active."
                 ),
                 instruction(
-                    title: "2. Move and click",
-                    body: "Use the configured movement keys, H/J/K/L by default. Hold keys for acceleration. Press Return to left-click."
+                    title: "2. Move the cursor",
+                    body: "Use H/J/K/L by default. Hold a key to accelerate, or hold two directions together for diagonal movement."
                 ),
                 instruction(
-                    title: "3. Type normally in text fields",
-                    body: "Cursor mode stays active after every click. Toggle cursor mode off with your shortcut when you want to type normally, then toggle it back on when you want mouse control again."
+                    title: "3. Click from the keyboard",
+                    body: "Return left-clicks, Return twice quickly double-clicks, and Shift-Return or Control-Return right-clicks. These click controls are fixed and always available in cursor mode."
                 ),
                 instruction(
                     title: "4. Scroll any app",
-                    body: "Use the scroll shortcuts to scroll left, down, up, or right. They work even while cursor mode is active."
+                    body: "Use Control-H/J/K/L by default to scroll left, down, up, or right in the frontmost app. Scrolling also works while cursor mode is active."
+                ),
+                instruction(
+                    title: "5. Return to normal typing",
+                    body: "Cursor mode stays active after clicks. Toggle it off with your cursor-mode shortcut when you want H/J/K/L and Return to type normally again."
                 )
             ]
         )
@@ -73,7 +77,7 @@ final class OnboardingWindowController: NSWindowController {
         steps.spacing = 14
 
         let settingsHint = NSTextField(
-            wrappingLabelWithString: "Open Settings to tune movement keys, movement speed, acceleration, update rate, scroll distance, and shortcut assignments."
+            wrappingLabelWithString: "Open Settings to tune movement keys, movement speed, acceleration, scroll distance, and global shortcuts."
         )
         settingsHint.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         settingsHint.textColor = .secondaryLabelColor

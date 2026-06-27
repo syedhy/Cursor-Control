@@ -3,6 +3,26 @@ import Testing
 @testable import VimClick
 
 struct CursorMotionTests {
+    @Test func cursorSettingsDefaultsMatchCurrentTuningButAllowSlowerValues() {
+        let defaults = CursorSettings()
+        let slower = CursorSettings(
+            initialSpeed: CursorSettings.minimumInitialSpeed,
+            maximumSpeed: CursorSettings.minimumMaximumSpeed,
+            accelerationPerFrame: CursorSettings.minimumAccelerationPerFrame,
+            frameRate: CursorSettings.minimumFrameRate
+        )
+
+        #expect(defaults.initialSpeed == 0.1)
+        #expect(defaults.maximumSpeed == 20)
+        #expect(defaults.accelerationPerFrame == 0.2)
+        #expect(defaults.frameRate == 144)
+        #expect(slower.initialSpeed < defaults.initialSpeed)
+        #expect(slower.maximumSpeed < defaults.maximumSpeed)
+        #expect(slower.accelerationPerFrame < defaults.accelerationPerFrame)
+        #expect(slower.frameRate < defaults.frameRate)
+        #expect(CursorSettings.maximumFrameRate == defaults.frameRate)
+    }
+
     @Test func oppositeDirectionsCancelOut() {
         let vector = CursorMotion.unitVector(for: [.left, .right])
 

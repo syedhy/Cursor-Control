@@ -56,4 +56,42 @@ struct CursorControlInputTests {
             ) == nil
         )
     }
+
+    @Test func returnClicksInMovementMode() {
+        #expect(
+            CursorControlInput(
+                keyCode: UInt32(KeyboardShortcuts.returnKeyCodes.first!),
+                modifiers: [],
+                isKeyDown: true,
+                captureMode: .movement
+            ) == .leftClick
+        )
+        #expect(
+            CursorControlInput(
+                keyCode: UInt32(KeyboardShortcuts.returnKeyCodes.first!),
+                modifiers: [.shift],
+                isKeyDown: true,
+                captureMode: .movement
+            ) == .rightClick
+        )
+        #expect(
+            CursorControlInput(
+                keyCode: UInt32(KeyboardShortcuts.returnKeyCodes.first!),
+                modifiers: [.control],
+                isKeyDown: true,
+                captureMode: .movement
+            ) == .rightClick
+        )
+    }
+
+    @Test func unsupportedModifiedReturnIsIgnored() {
+        #expect(
+            CursorControlInput(
+                keyCode: UInt32(KeyboardShortcuts.returnKeyCodes.first!),
+                modifiers: [.option],
+                isKeyDown: true,
+                captureMode: .movement
+            ) == nil
+        )
+    }
 }

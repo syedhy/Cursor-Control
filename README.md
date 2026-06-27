@@ -72,45 +72,44 @@ The menu bar menu contains:
 ### Cursor Control Mode
 
 Cursor Control Mode lets you move the visible mouse cursor directly from the
-keyboard. Press **Command-Shift-Option-R** by default to enter or exit cursor
-mode. While it is active:
+keyboard. Press **Option-W** by default to enter or exit cursor mode. While it
+is active:
 
 - **H/J/K/L** move the real cursor left, down, up, and right
 - Holding movement keys accelerates smoothly
 - Holding two movement keys moves diagonally
 - **Return** left-clicks at the current cursor location
-- **Escape** exits cursor mode while movement control is active
+- Press **Return** twice quickly to double-click
+- **Shift-Return** or **Control-Return** right-clicks
 
-After pressing **Return**, VimClick switches into a text-entry pass-through
-state. This is useful when you click into a search field or text box: **H/J/K/L**
-type normally instead of moving the cursor. Press **Escape** to return to cursor
-movement mode.
+Cursor mode stays active after clicks. Toggle cursor mode off with the shortcut
+when you want normal typing, then toggle it back on when you want keyboard mouse
+control again.
 
 ### Scrolling
 
 Scrolling works globally without opening any extra window. Press
-**Command-Control-Option-H/J/K/L** to scroll left, down, up, and right in the
-frontmost app.
+**Control-H/J/K/L** to scroll left, down, up, and right in the frontmost app.
 
-Scroll shortcuts also work while Cursor Control Mode is active, including while
-you are in the text-entry pass-through state.
+Scroll shortcuts also work while Cursor Control Mode is active.
 
 Settings lets you tune the scroll distance from single-pixel movement up to
-fast movement, the number of scroll events per repeat, hold acceleration,
-acceleration cap, and separate vertical/horizontal multipliers.
+fast movement, the number of scroll events per repeat, hold acceleration, and
+acceleration cap.
 
 ## Default global shortcuts
 
-- **Command-Shift-Option-R** — enter or exit cursor-control mode
-- **Command-Control-Option-H/J/K/L** — scroll left/down/up/right in the frontmost app
+- **Option-W** — enter or exit cursor-control mode
+- **Control-H/J/K/L** — scroll left/down/up/right in the frontmost app
 
 Settings supports recording new global shortcuts, rejecting duplicates,
 persisting changes, recovering from registration failures, and restoring
 defaults. It has separate sections for shortcuts, scrolling, and cursor
 control. Cursor-control tuning includes initial speed, maximum speed,
-acceleration, and update rate so users can balance precise single-tap movement
-with fast corner-to-corner travel. Mode-local keys such as **H/J/K/L**,
-**Return**, and **Escape** are fixed and are not exposed as settings.
+and acceleration so users can balance precise single-tap movement with fast
+corner-to-corner travel. Movement keys such as **H/J/K/L** are configurable.
+Click controls such as **Return**, double **Return**, **Shift-Return**, and
+**Control-Return** are fixed and are not exposed as settings.
 
 ## Accessibility permission
 

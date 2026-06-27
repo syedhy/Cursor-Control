@@ -62,7 +62,7 @@ private final class NumericSettingControl {
             target: target,
             action: action
         )
-        slider.widthAnchor.constraint(equalToConstant: 210).isActive = true
+        slider.widthAnchor.constraint(equalToConstant: 190).isActive = true
 
         field = NSTextField(string: "")
         field.target = target
@@ -74,16 +74,18 @@ private final class NumericSettingControl {
     func row(title: String, description: String) -> NSView {
         let titleLabel = NSTextField(labelWithString: title)
         titleLabel.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .medium)
+        titleLabel.maximumNumberOfLines = 1
 
         let descriptionLabel = NSTextField(wrappingLabelWithString: description)
         descriptionLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         descriptionLabel.textColor = .secondaryLabelColor
-        descriptionLabel.maximumNumberOfLines = 0
+        descriptionLabel.maximumNumberOfLines = 2
 
         let labelStack = NSStackView(views: [titleLabel, descriptionLabel])
         labelStack.orientation = .vertical
         labelStack.alignment = .leading
-        labelStack.spacing = 3
+        labelStack.spacing = 2
+        labelStack.edgeInsets = NSEdgeInsets(top: 1, left: 0, bottom: 1, right: 0)
         labelStack.widthAnchor.constraint(greaterThanOrEqualToConstant: 250).isActive = true
 
         let suffixLabel = NSTextField(labelWithString: suffix)
@@ -93,7 +95,8 @@ private final class NumericSettingControl {
         let row = NSStackView(views: [labelStack, slider, field, suffixLabel])
         row.orientation = .horizontal
         row.alignment = .centerY
-        row.spacing = 12
+        row.spacing = 10
+        row.heightAnchor.constraint(greaterThanOrEqualToConstant: 54).isActive = true
         return row
     }
 
@@ -229,14 +232,6 @@ final class SettingsWindowController: NSWindowController {
 
     private func makeContentView() -> NSView {
         let container = NSView()
-        let scrollView = NSScrollView()
-        scrollView.drawsBackground = false
-        scrollView.hasVerticalScroller = true
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-
-        let documentView = NSView()
-        documentView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.documentView = documentView
 
         let titleLabel = NSTextField(labelWithString: "VimClick Settings")
         titleLabel.font = .systemFont(ofSize: 20, weight: .semibold)
@@ -272,26 +267,19 @@ final class SettingsWindowController: NSWindowController {
         )
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 16
+        stack.spacing = 12
         stack.translatesAutoresizingMaskIntoConstraints = false
 
-        documentView.addSubview(stack)
-        container.addSubview(scrollView)
+        container.addSubview(stack)
         tabView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            scrollView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-            scrollView.topAnchor.constraint(equalTo: container.topAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: container.bottomAnchor),
-
-            documentView.widthAnchor.constraint(equalTo: scrollView.contentView.widthAnchor),
             tabView.widthAnchor.constraint(equalTo: stack.widthAnchor),
-            tabView.heightAnchor.constraint(equalToConstant: 560),
+            tabView.heightAnchor.constraint(equalToConstant: 500),
 
-            stack.leadingAnchor.constraint(equalTo: documentView.leadingAnchor, constant: 28),
-            stack.trailingAnchor.constraint(equalTo: documentView.trailingAnchor, constant: -28),
-            stack.topAnchor.constraint(equalTo: documentView.topAnchor, constant: 28),
-            stack.bottomAnchor.constraint(equalTo: documentView.bottomAnchor, constant: -24)
+            stack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 28),
+            stack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -28),
+            stack.topAnchor.constraint(equalTo: container.topAnchor, constant: 22),
+            stack.bottomAnchor.constraint(lessThanOrEqualTo: container.bottomAnchor, constant: -18)
         ])
 
         refreshShortcutButtons()
@@ -323,8 +311,8 @@ final class SettingsWindowController: NSWindowController {
         NSLayoutConstraint.activate([
             content.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 18),
             content.trailingAnchor.constraint(lessThanOrEqualTo: container.trailingAnchor, constant: -18),
-            content.topAnchor.constraint(equalTo: container.topAnchor, constant: 18),
-            content.bottomAnchor.constraint(lessThanOrEqualTo: container.bottomAnchor, constant: -18)
+            content.topAnchor.constraint(equalTo: container.topAnchor, constant: 12),
+            content.bottomAnchor.constraint(lessThanOrEqualTo: container.bottomAnchor, constant: -12)
         ])
         return container
     }
@@ -338,16 +326,40 @@ final class SettingsWindowController: NSWindowController {
         let shortcutStack = NSStackView()
         shortcutStack.orientation = .vertical
         shortcutStack.alignment = .leading
-        shortcutStack.spacing = 14
+        shortcutStack.spacing = 9
 
         for identifier in ShortcutIdentifier.allCases {
             shortcutStack.addArrangedSubview(makeShortcutRow(for: identifier))
         }
 
-        let stack = NSStackView(views: [sectionLabel, shortcutStack])
+        let clickDescription = sectionDescription(
+            title: "Click Controls",
+            body: "Fixed mouse-button controls available while cursor control mode is active."
+        )
+
+        let clickStack = NSStackView()
+        clickStack.orientation = .vertical
+        clickStack.alignment = .leading
+        clickStack.spacing = 8
+        clickStack.addArrangedSubview(
+            fixedShortcutRow(
+                title: "Left click",
+                description: "Clicks once at the current cursor location.",
+                shortcut: "Return"
+            )
+        )
+        clickStack.addArrangedSubview(
+            fixedShortcutRow(
+                title: "Right click",
+                description: "Opens context menus and secondary-click actions.",
+                shortcut: "Shift-Return or Control-Return"
+            )
+        )
+
+        let stack = NSStackView(views: [sectionLabel, shortcutStack, clickDescription, clickStack])
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 14
+        stack.spacing = 10
         return stack
     }
 
@@ -393,31 +405,13 @@ final class SettingsWindowController: NSWindowController {
                 ScrollSettings.maximumMaximumMultiplier,
                 false,
                 "x"
-            ),
-            (
-                .verticalMultiplier,
-                "Vertical multiplier",
-                "Scales up/down scroll distance without affecting left/right.",
-                ScrollSettings.minimumAxisMultiplier,
-                ScrollSettings.maximumAxisMultiplier,
-                false,
-                "x"
-            ),
-            (
-                .horizontalMultiplier,
-                "Horizontal multiplier",
-                "Scales left/right scroll distance without affecting up/down.",
-                ScrollSettings.minimumAxisMultiplier,
-                ScrollSettings.maximumAxisMultiplier,
-                false,
-                "x"
             )
         ]
 
         let stack = NSStackView(views: [sectionLabel])
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 12
+        stack.spacing = 9
 
         for row in rows {
             let control = NumericSettingControl(
@@ -468,22 +462,13 @@ final class SettingsWindowController: NSWindowController {
                 CursorSettings.maximumAccelerationPerFrame,
                 false,
                 "px/frame²"
-            ),
-            (
-                .frameRate,
-                "Update rate",
-                "How often VimClick updates cursor movement while keys are held.",
-                CursorSettings.minimumFrameRate,
-                CursorSettings.maximumFrameRate,
-                false,
-                "Hz"
             )
         ]
 
         let stack = NSStackView(views: [sectionLabel])
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 12
+        stack.spacing = 9
 
         for row in rows {
             let control = NumericSettingControl(
@@ -507,7 +492,7 @@ final class SettingsWindowController: NSWindowController {
         let bindingStack = NSStackView()
         bindingStack.orientation = .vertical
         bindingStack.alignment = .leading
-        bindingStack.spacing = 12
+        bindingStack.spacing = 7
 
         for direction in CursorMovementDirection.allCases {
             bindingStack.addArrangedSubview(makeCursorMovementRow(for: direction))
@@ -566,6 +551,36 @@ final class SettingsWindowController: NSWindowController {
         row.spacing = 18
         row.translatesAutoresizingMaskIntoConstraints = false
         labelStack.widthAnchor.constraint(greaterThanOrEqualToConstant: 360).isActive = true
+        return row
+    }
+
+    private func fixedShortcutRow(title: String, description: String, shortcut: String) -> NSView {
+        let titleLabel = NSTextField(labelWithString: title)
+        titleLabel.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .medium)
+
+        let descriptionLabel = NSTextField(wrappingLabelWithString: description)
+        descriptionLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        descriptionLabel.textColor = .secondaryLabelColor
+        descriptionLabel.maximumNumberOfLines = 0
+
+        let labelStack = NSStackView(views: [titleLabel, descriptionLabel])
+        labelStack.orientation = .vertical
+        labelStack.alignment = .leading
+        labelStack.spacing = 3
+        labelStack.widthAnchor.constraint(greaterThanOrEqualToConstant: 360).isActive = true
+
+        let shortcutButton = NSButton(title: shortcut, target: nil, action: nil)
+        shortcutButton.bezelStyle = .rounded
+        shortcutButton.isEnabled = false
+        shortcutButton.toolTip = "Fixed shortcut"
+        shortcutButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 220).isActive = true
+        shortcutButton.heightAnchor.constraint(equalToConstant: 32).isActive = true
+
+        let row = NSStackView(views: [labelStack, shortcutButton])
+        row.orientation = .horizontal
+        row.alignment = .centerY
+        row.spacing = 18
+        row.translatesAutoresizingMaskIntoConstraints = false
         return row
     }
 
@@ -704,13 +719,14 @@ final class SettingsWindowController: NSWindowController {
     }
 
     @objc private func scrollSettingChanged(_ sender: Any) {
+        let currentSettings = scrollSettingsProvider()
         let settings = ScrollSettings(
             pixelDelta: Int32(readScroll(.pixelDelta, sender: sender)),
             eventsPerShortcut: Int(readScroll(.eventsPerShortcut, sender: sender)),
             accelerationPerRepeat: readScroll(.accelerationPerRepeat, sender: sender),
             maximumAccelerationMultiplier: readScroll(.maximumAccelerationMultiplier, sender: sender),
-            verticalMultiplier: readScroll(.verticalMultiplier, sender: sender),
-            horizontalMultiplier: readScroll(.horizontalMultiplier, sender: sender)
+            verticalMultiplier: currentSettings.verticalMultiplier,
+            horizontalMultiplier: currentSettings.horizontalMultiplier
         )
         onScrollSettingsChange(settings)
         refreshScrollSettingsControls(with: settings)
@@ -718,11 +734,12 @@ final class SettingsWindowController: NSWindowController {
     }
 
     @objc private func cursorSettingChanged(_ sender: Any) {
+        let currentSettings = cursorSettingsProvider()
         let settings = CursorSettings(
             initialSpeed: readCursor(.initialSpeed, sender: sender),
             maximumSpeed: readCursor(.maximumSpeed, sender: sender),
             accelerationPerFrame: readCursor(.accelerationPerFrame, sender: sender),
-            frameRate: readCursor(.frameRate, sender: sender)
+            frameRate: currentSettings.frameRate
         )
         onCursorSettingsChange(settings)
         refreshCursorSettingsControls(with: settings)

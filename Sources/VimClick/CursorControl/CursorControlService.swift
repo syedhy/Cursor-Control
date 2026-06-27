@@ -12,10 +12,13 @@ final class CursorControlService {
     private let cursorPositionService: any CursorPositionProviding
     private let mouseClickService: any MouseClicking
     private let settingsProvider: () -> CursorSettings
+    private let dateProvider: () -> Date
+    private let doubleClickInterval: TimeInterval
     private var accessibilityGuidanceState = AccessibilityGuidanceState()
     private var heldDirections: Set<CursorMovementDirection> = []
     private var movementTimer: Timer?
     private var movementTick = 0
+    private var lastLeftClick: (date: Date, point: CGPoint)?
     private(set) var isActive = false
     private(set) var captureMode: CursorControlCaptureMode = .movement
     private let logger = Logger(
@@ -28,13 +31,17 @@ final class CursorControlService {
         permissionAlert: any AccessibilityPermissionAlerting = AccessibilityPermissionAlert(),
         cursorPositionService: any CursorPositionProviding = QuartzCursorPositionService(),
         mouseClickService: any MouseClicking = MouseClickService(),
-        settingsProvider: @escaping () -> CursorSettings = { CursorSettings() }
+        settingsProvider: @escaping () -> CursorSettings = { CursorSettings() },
+        dateProvider: @escaping () -> Date = Date.init,
+        doubleClickInterval: TimeInterval = NSEvent.doubleClickInterval
     ) {
         self.permissionService = permissionService
         self.permissionAlert = permissionAlert
         self.cursorPositionService = cursorPositionService
         self.mouseClickService = mouseClickService
         self.settingsProvider = settingsProvider
+        self.dateProvider = dateProvider
+        self.doubleClickInterval = doubleClickInterval
     }
 
     func toggle() {
@@ -49,6 +56,7 @@ final class CursorControlService {
         captureMode = .movement
         heldDirections.removeAll()
         movementTick = 0
+        lastLeftClick = nil
         onActiveStateChanged?(true)
         onCaptureModeChanged?(.movement)
         logger.notice("Cursor control mode started")
@@ -58,6 +66,7 @@ final class CursorControlService {
         guard isActive else { return }
 
         stopMovement()
+        lastLeftClick = nil
         isActive = false
         captureMode = .movement
         onActiveStateChanged?(false)
@@ -90,8 +99,10 @@ final class CursorControlService {
             if heldDirections.isEmpty {
                 stopMovement()
             }
-        case .click:
-            performClickWithoutExiting()
+        case .leftClick:
+            performClickWithoutExiting(.left)
+        case .rightClick:
+            performClickWithoutExiting(.right)
         }
     }
 
@@ -130,6 +141,7 @@ final class CursorControlService {
         movementTimer = nil
         heldDirections.removeAll()
         movementTick = 0
+        lastLeftClick = nil
     }
 
     private func moveCursorOneFrame() {
@@ -160,17 +172,58 @@ final class CursorControlService {
     }
 
     @discardableResult
-    private func performClickWithoutExiting() -> Bool {
+    private func performClickWithoutExiting(_ requestedKind: MouseClickKind) -> Bool {
         guard ensureAccessibilityPermission(),
               let currentLocation = cursorPositionService.currentLocation else {
             return false
         }
 
-        if !mouseClickService.leftClick(at: currentLocation) {
+        let kind = effectiveClickKind(
+            requestedKind: requestedKind,
+            currentLocation: currentLocation
+        )
+
+        if !mouseClickService.click(kind, at: currentLocation) {
             permissionAlert.presentClickFailure()
             return false
         }
 
+        updateClickTracking(after: kind, at: currentLocation)
         return true
+    }
+
+    private func effectiveClickKind(
+        requestedKind: MouseClickKind,
+        currentLocation: CGPoint
+    ) -> MouseClickKind {
+        guard requestedKind == .left else {
+            return requestedKind
+        }
+
+        let now = dateProvider()
+        guard let lastLeftClick,
+              now.timeIntervalSince(lastLeftClick.date) <= doubleClickInterval,
+              currentLocation.distance(to: lastLeftClick.point) <= AppConstants.doubleClickMaximumDistance else {
+            return .left
+        }
+
+        return .doubleLeft
+    }
+
+    private func updateClickTracking(after kind: MouseClickKind, at point: CGPoint) {
+        switch kind {
+        case .left:
+            lastLeftClick = (dateProvider(), point)
+        case .doubleLeft, .right:
+            lastLeftClick = nil
+        }
+    }
+}
+
+private extension CGPoint {
+    func distance(to otherPoint: CGPoint) -> CGFloat {
+        let deltaX = x - otherPoint.x
+        let deltaY = y - otherPoint.y
+        return sqrt(deltaX * deltaX + deltaY * deltaY)
     }
 }

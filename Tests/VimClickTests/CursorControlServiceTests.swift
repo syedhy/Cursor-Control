@@ -1,4 +1,5 @@
 import CoreGraphics
+import Foundation
 import Testing
 @testable import VimClick
 
@@ -13,11 +14,11 @@ struct CursorControlServiceTests {
         service.onActiveStateChanged = { activeStateChanges.append($0) }
 
         service.start()
-        service.handle(.click)
+        service.handle(.leftClick)
 
         #expect(service.isActive)
         #expect(service.captureMode == .movement)
-        #expect(mouseClickService.clickedPoints == [clickLocation])
+        #expect(mouseClickService.clicks == [MouseClickRecord(kind: .left, point: clickLocation)])
         #expect(activeStateChanges == [true])
     }
 
@@ -31,11 +32,66 @@ struct CursorControlServiceTests {
         )
 
         service.start()
-        service.handle(.click)
+        service.handle(.leftClick)
 
         #expect(service.isActive)
         #expect(service.captureMode == .movement)
         #expect(alert.clickFailureCount == 1)
+    }
+
+    @Test func quickSecondLeftClickPostsDoubleClick() {
+        let mouseClickService = SpyMouseClickService()
+        var now = Date(timeIntervalSince1970: 1_000)
+        let service = makeService(
+            mouseClickService: mouseClickService,
+            dateProvider: { now },
+            doubleClickInterval: 0.5
+        )
+
+        service.start()
+        service.handle(.leftClick)
+        now = now.addingTimeInterval(0.2)
+        service.handle(.leftClick)
+
+        #expect(
+            mouseClickService.clicks == [
+                MouseClickRecord(kind: .left, point: clickLocation),
+                MouseClickRecord(kind: .doubleLeft, point: clickLocation)
+            ]
+        )
+    }
+
+    @Test func slowSecondLeftClickPostsSingleClick() {
+        let mouseClickService = SpyMouseClickService()
+        var now = Date(timeIntervalSince1970: 1_000)
+        let service = makeService(
+            mouseClickService: mouseClickService,
+            dateProvider: { now },
+            doubleClickInterval: 0.5
+        )
+
+        service.start()
+        service.handle(.leftClick)
+        now = now.addingTimeInterval(0.7)
+        service.handle(.leftClick)
+
+        #expect(
+            mouseClickService.clicks == [
+                MouseClickRecord(kind: .left, point: clickLocation),
+                MouseClickRecord(kind: .left, point: clickLocation)
+            ]
+        )
+    }
+
+    @Test func rightClickPostsRightClickWithoutExiting() {
+        let mouseClickService = SpyMouseClickService()
+        let service = makeService(mouseClickService: mouseClickService)
+
+        service.start()
+        service.handle(.rightClick)
+
+        #expect(service.isActive)
+        #expect(mouseClickService.clicks == [MouseClickRecord(kind: .right, point: clickLocation)])
     }
 
     @Test func successfulMovementReportsMovedCursorPoint() {
@@ -59,7 +115,9 @@ struct CursorControlServiceTests {
         permission: FakeAccessibilityPermission = FakeAccessibilityPermission(isTrusted: true),
         alert: FakeAccessibilityAlert = FakeAccessibilityAlert(),
         cursorPositionService: FakeCursorPositionService? = nil,
-        mouseClickService: SpyMouseClickService = SpyMouseClickService()
+        mouseClickService: SpyMouseClickService = SpyMouseClickService(),
+        dateProvider: @escaping () -> Date = Date.init,
+        doubleClickInterval: TimeInterval = 0.5
     ) -> CursorControlService {
         CursorControlService(
             permissionService: permission,
@@ -68,7 +126,9 @@ struct CursorControlServiceTests {
                 currentLocation: clickLocation,
                 currentDisplayBounds: CGRect(x: 0, y: 0, width: 1200, height: 800)
             ),
-            mouseClickService: mouseClickService
+            mouseClickService: mouseClickService,
+            dateProvider: dateProvider,
+            doubleClickInterval: doubleClickInterval
         )
     }
 }
@@ -123,12 +183,17 @@ private final class FakeCursorPositionService: CursorPositionProviding {
     }
 }
 
+private struct MouseClickRecord: Equatable {
+    let kind: MouseClickKind
+    let point: CGPoint
+}
+
 private final class SpyMouseClickService: MouseClicking {
     var shouldSucceed = true
-    private(set) var clickedPoints: [CGPoint] = []
+    private(set) var clicks: [MouseClickRecord] = []
 
-    func leftClick(at point: CGPoint) -> Bool {
-        clickedPoints.append(point)
+    func click(_ kind: MouseClickKind, at point: CGPoint) -> Bool {
+        clicks.append(MouseClickRecord(kind: kind, point: point))
         return shouldSucceed
     }
 }

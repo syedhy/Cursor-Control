@@ -192,8 +192,22 @@ final class GlobalInputEventTap {
         }
 
         if KeyboardShortcuts.returnKeyCodes.contains(UInt16(keyCode)) {
-            guard modifiers.isEmpty else { return nil }
-            return CursorInputHandling(input: isKeyDown ? .click : nil)
+            let isSupportedClickShortcut = modifiers.isEmpty
+                || modifiers == [.shift]
+                || modifiers == [.control]
+            guard isSupportedClickShortcut else {
+                return nil
+            }
+
+            return CursorInputHandling(
+                input: CursorControlInput(
+                    keyCode: keyCode,
+                    modifiers: modifiers,
+                    isKeyDown: isKeyDown,
+                    captureMode: cursorCaptureMode,
+                    movementBindings: cursorMovementBindings
+                )
+            )
         }
 
         guard let direction = cursorMovementBindings.direction(

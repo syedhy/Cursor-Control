@@ -11,7 +11,8 @@ struct ShortcutStoreTests {
             store.shortcut(for: .activateCursorMode)
                 == KeyboardShortcuts.defaultGlobalShortcuts[.activateCursorMode]
         )
-        #expect(store.shortcut(for: .scrollRight).displayName == "Command-Option-Control-L")
+        #expect(store.shortcut(for: .activateCursorMode).displayName == "Option-W")
+        #expect(store.shortcut(for: .scrollRight).displayName == "Control-L")
     }
 
     @Test func persistsUpdatedShortcuts() {
@@ -104,7 +105,7 @@ struct ShortcutStoreTests {
         let store = ShortcutStore(userDefaults: defaults)
 
         #expect(store.shortcut(for: .activateCursorMode).displayName == "Option-W")
-        #expect(store.shortcut(for: .scrollDown).displayName == "Command-Option-Control-J")
+        #expect(store.shortcut(for: .scrollDown).displayName == "Control-J")
     }
 
     private func makeStore() -> ShortcutStore {

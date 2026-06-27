@@ -10,32 +10,32 @@ enum KeyboardShortcuts {
 
     static let defaultGlobalShortcuts: [ShortcutIdentifier: KeyboardShortcut] = [
         .activateCursorMode: KeyboardShortcut(
-            keyCode: 15,
-            modifiers: [.command, .shift, .option],
-            keyEquivalent: "r",
-            displayKey: "R"
+            keyCode: 13,
+            modifiers: [.option],
+            keyEquivalent: "w",
+            displayKey: "W"
         ),
         .scrollLeft: KeyboardShortcut(
             keyCode: moveLeftKeyCode,
-            modifiers: [.command, .control, .option],
+            modifiers: [.control],
             keyEquivalent: "h",
             displayKey: "H"
         ),
         .scrollDown: KeyboardShortcut(
             keyCode: moveDownKeyCode,
-            modifiers: [.command, .control, .option],
+            modifiers: [.control],
             keyEquivalent: "j",
             displayKey: "J"
         ),
         .scrollUp: KeyboardShortcut(
             keyCode: moveUpKeyCode,
-            modifiers: [.command, .control, .option],
+            modifiers: [.control],
             keyEquivalent: "k",
             displayKey: "K"
         ),
         .scrollRight: KeyboardShortcut(
             keyCode: moveRightKeyCode,
-            modifiers: [.command, .control, .option],
+            modifiers: [.control],
             keyEquivalent: "l",
             displayKey: "L"
         )
