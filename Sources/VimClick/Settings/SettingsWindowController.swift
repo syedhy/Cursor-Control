@@ -4,6 +4,7 @@ private enum SettingsSection: Int, CaseIterable {
     case shortcuts
     case scrolling
     case cursorControl
+    case halo
 
     var title: String {
         switch self {
@@ -13,6 +14,8 @@ private enum SettingsSection: Int, CaseIterable {
             return "Scrolling"
         case .cursorControl:
             return "Cursor Control"
+        case .halo:
+            return "Halo Settings"
         }
     }
 }
@@ -31,6 +34,8 @@ private enum CursorSettingKey {
     case maximumSpeed
     case accelerationPerFrame
     case frameRate
+    case haloSize
+    case haloOpacity
 }
 
 @MainActor
@@ -295,6 +300,7 @@ final class SettingsWindowController: NSWindowController {
         tabView.addTabViewItem(tabItem(.shortcuts, view: makeShortcutsSection()))
         tabView.addTabViewItem(tabItem(.scrolling, view: makeScrollSettingsSection()))
         tabView.addTabViewItem(tabItem(.cursorControl, view: makeCursorSettingsSection()))
+        tabView.addTabViewItem(tabItem(.halo, view: makeHaloSettingsSection()))
         tabView.selectTabViewItem(at: 0)
     }
 
@@ -484,6 +490,71 @@ final class SettingsWindowController: NSWindowController {
             stack.addArrangedSubview(control.row(title: row.1, description: row.2))
         }
 
+
+        let bindingDescription = sectionDescription(
+            title: "Movement Keys",
+            body: "Choose the keys VimClick captures while cursor control mode is active. Plain keys like H/J/K/L and modified keys like Shift-H are both allowed."
+        )
+        stack.addArrangedSubview(bindingDescription)
+
+        let bindingStack = NSStackView()
+        bindingStack.orientation = .vertical
+        bindingStack.alignment = .leading
+        bindingStack.spacing = 7
+
+        for direction in CursorMovementDirection.allCases {
+            bindingStack.addArrangedSubview(makeCursorMovementRow(for: direction))
+        }
+        stack.addArrangedSubview(bindingStack)
+
+        return stack
+    }
+
+    private func makeHaloSettingsSection() -> NSView {
+        let sectionLabel = sectionDescription(
+            title: "Halo Settings",
+            body: "Customize the appearance of the cursor mode indicator."
+        )
+
+        let rows: [(CursorSettingKey, String, String, Double, Double, Bool, String)] = [
+            (
+                .haloSize,
+                "Halo Size",
+                "Size of the solid center blob.",
+                CursorSettings.minimumHaloSize,
+                CursorSettings.maximumHaloSize,
+                false,
+                "px"
+            ),
+            (
+                .haloOpacity,
+                "Halo Opacity",
+                "Transparency of the halo trail (0.1 to 1.0).",
+                CursorSettings.minimumHaloOpacity,
+                CursorSettings.maximumHaloOpacity,
+                false,
+                "alpha"
+            )
+        ]
+
+        let stack = NSStackView(views: [sectionLabel])
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 9
+
+        for row in rows {
+            let control = NumericSettingControl(
+                minimum: row.3,
+                maximum: row.4,
+                isInteger: row.5,
+                suffix: row.6,
+                target: self,
+                action: #selector(cursorSettingChanged(_:))
+            )
+            cursorControls[row.0] = control
+            stack.addArrangedSubview(control.row(title: row.1, description: row.2))
+        }
+
         let haloColorLabel = NSTextField(labelWithString: "Indicator color")
         haloColorLabel.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .medium)
         
@@ -516,22 +587,6 @@ final class SettingsWindowController: NSWindowController {
         haloColorRow.heightAnchor.constraint(greaterThanOrEqualToConstant: 54).isActive = true
         
         stack.addArrangedSubview(haloColorRow)
-
-        let bindingDescription = sectionDescription(
-            title: "Movement Keys",
-            body: "Choose the keys VimClick captures while cursor control mode is active. Plain keys like H/J/K/L and modified keys like Shift-H are both allowed."
-        )
-        stack.addArrangedSubview(bindingDescription)
-
-        let bindingStack = NSStackView()
-        bindingStack.orientation = .vertical
-        bindingStack.alignment = .leading
-        bindingStack.spacing = 7
-
-        for direction in CursorMovementDirection.allCases {
-            bindingStack.addArrangedSubview(makeCursorMovementRow(for: direction))
-        }
-        stack.addArrangedSubview(bindingStack)
 
         return stack
     }
@@ -768,28 +823,20 @@ final class SettingsWindowController: NSWindowController {
     }
 
     @objc private func cursorSettingChanged(_ sender: Any) {
-        let currentSettings = cursorSettingsProvider()
-        let settings = CursorSettings(
-            initialSpeed: readCursor(.initialSpeed, sender: sender),
-            maximumSpeed: readCursor(.maximumSpeed, sender: sender),
-            accelerationPerFrame: readCursor(.accelerationPerFrame, sender: sender),
-            frameRate: currentSettings.frameRate,
-            haloColor: currentSettings.haloColor
-        )
+        var settings = cursorSettingsProvider()
+        settings.initialSpeed = readCursor(.initialSpeed, sender: sender)
+        settings.maximumSpeed = readCursor(.maximumSpeed, sender: sender)
+        settings.accelerationPerFrame = readCursor(.accelerationPerFrame, sender: sender)
+        settings.haloSize = readCursor(.haloSize, sender: sender)
+        settings.haloOpacity = readCursor(.haloOpacity, sender: sender)
         onCursorSettingsChange(settings)
         refreshCursorSettingsControls(with: settings)
         showMessage("Updated cursor-control tuning.", isError: false)
     }
 
     @objc private func haloColorButtonTapped(_ sender: ColorButton) {
-        let currentSettings = cursorSettingsProvider()
-        let settings = CursorSettings(
-            initialSpeed: currentSettings.initialSpeed,
-            maximumSpeed: currentSettings.maximumSpeed,
-            accelerationPerFrame: currentSettings.accelerationPerFrame,
-            frameRate: currentSettings.frameRate,
-            haloColor: sender.haloColor
-        )
+        var settings = cursorSettingsProvider()
+        settings.haloColor = sender.haloColor
         onCursorSettingsChange(settings)
         refreshCursorSettingsControls(with: settings)
         showMessage("Updated indicator color.", isError: false)
@@ -819,6 +866,8 @@ final class SettingsWindowController: NSWindowController {
         cursorControls[.maximumSpeed]?.setValue(settings.maximumSpeed)
         cursorControls[.accelerationPerFrame]?.setValue(settings.accelerationPerFrame)
         cursorControls[.frameRate]?.setValue(settings.frameRate)
+        cursorControls[.haloSize]?.setValue(settings.haloSize)
+        cursorControls[.haloOpacity]?.setValue(settings.haloOpacity)
         for (color, button) in haloColorButtons {
             button.isSelectedColor = (color == settings.haloColor)
         }

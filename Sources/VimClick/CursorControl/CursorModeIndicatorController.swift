@@ -108,7 +108,10 @@ final class CursorModeIndicatorController {
 
         if let indicatorView = window.contentView as? CursorModeIndicatorView {
             let windowOrigin = window.frame.origin
-            indicatorView.haloColor = settingsProvider().haloColor.nsColor
+            let settings = settingsProvider()
+            indicatorView.haloColor = settings.haloColor.nsColor
+            indicatorView.haloSize = settings.haloSize
+            indicatorView.haloOpacity = settings.haloOpacity
             indicatorView.trailPoints = trailPoints.map {
                 CGPoint(x: $0.x - windowOrigin.x, y: $0.y - windowOrigin.y)
             }
@@ -156,6 +159,18 @@ private final class CursorModeIndicatorView: NSView {
         }
     }
     
+    var haloSize: Double = 12.0 {
+        didSet {
+            if haloSize != oldValue { needsDisplay = true }
+        }
+    }
+    
+    var haloOpacity: Double = 1.0 {
+        didSet {
+            if haloOpacity != oldValue { needsDisplay = true }
+        }
+    }
+    
     var trailPoints: [CGPoint] = [] {
         didSet {
             needsDisplay = true
@@ -187,14 +202,8 @@ private final class CursorModeIndicatorView: NSView {
             drawTrailSegment(
                 from: previousPoint,
                 to: currentPoint,
-                lineWidth: AppConstants.cursorModeIndicatorHaloSize * 0.82,
-                alpha: 0.045 * pow(progress, 1.55)
-            )
-            drawTrailSegment(
-                from: previousPoint,
-                to: currentPoint,
-                lineWidth: AppConstants.cursorModeIndicatorDotSize * 1.8,
-                alpha: 0.13 * pow(progress, 1.75)
+                lineWidth: haloSize * progress,
+                alpha: 0.6 * haloOpacity * progress
             )
         }
     }
@@ -244,25 +253,14 @@ private final class CursorModeIndicatorView: NSView {
     private func drawCurrentDot() {
         guard let currentPoint = trailPoints.last else { return }
 
-        let haloSize = AppConstants.cursorModeIndicatorHaloSize
-        haloColor.withAlphaComponent(0.18).setFill()
+        let blobSize = haloSize
+        haloColor.withAlphaComponent(haloOpacity).setFill()
         NSBezierPath(
             ovalIn: CGRect(
-                x: currentPoint.x - haloSize / 2,
-                y: currentPoint.y - haloSize / 2,
-                width: haloSize,
-                height: haloSize
-            )
-        ).fill()
-
-        let dotSize = AppConstants.cursorModeIndicatorDotSize
-        haloColor.withAlphaComponent(0.88).setFill()
-        NSBezierPath(
-            ovalIn: CGRect(
-                x: currentPoint.x - dotSize / 2,
-                y: currentPoint.y - dotSize / 2,
-                width: dotSize,
-                height: dotSize
+                x: currentPoint.x - blobSize / 2,
+                y: currentPoint.y - blobSize / 2,
+                width: blobSize,
+                height: blobSize
             )
         ).fill()
     }
