@@ -159,6 +159,7 @@ final class SettingsWindowController: NSWindowController {
     private var scrollControls: [ScrollSettingKey: NumericSettingControl] = [:]
     private var cursorControls: [CursorSettingKey: NumericSettingControl] = [:]
     private var recordingEventMonitor: Any?
+    private var haloColorButtons: [HaloColor: ColorButton] = [:]
     private let messageLabel = NSTextField(labelWithString: "")
     private let tabView = NSTabView()
 
@@ -274,7 +275,7 @@ final class SettingsWindowController: NSWindowController {
         tabView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             tabView.widthAnchor.constraint(equalTo: stack.widthAnchor),
-            tabView.heightAnchor.constraint(equalToConstant: 500),
+            tabView.heightAnchor.constraint(equalToConstant: 580),
 
             stack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 28),
             stack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -28),
@@ -326,7 +327,7 @@ final class SettingsWindowController: NSWindowController {
         let shortcutStack = NSStackView()
         shortcutStack.orientation = .vertical
         shortcutStack.alignment = .leading
-        shortcutStack.spacing = 9
+        shortcutStack.spacing = 16
 
         for identifier in ShortcutIdentifier.allCases {
             shortcutStack.addArrangedSubview(makeShortcutRow(for: identifier))
@@ -340,7 +341,7 @@ final class SettingsWindowController: NSWindowController {
         let clickStack = NSStackView()
         clickStack.orientation = .vertical
         clickStack.alignment = .leading
-        clickStack.spacing = 8
+        clickStack.spacing = 16
         clickStack.addArrangedSubview(
             fixedShortcutRow(
                 title: "Left click",
@@ -359,7 +360,7 @@ final class SettingsWindowController: NSWindowController {
         let stack = NSStackView(views: [sectionLabel, shortcutStack, clickDescription, clickStack])
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 10
+        stack.spacing = 24
         return stack
     }
 
@@ -411,7 +412,7 @@ final class SettingsWindowController: NSWindowController {
         let stack = NSStackView(views: [sectionLabel])
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 9
+        stack.spacing = 20
 
         for row in rows {
             let control = NumericSettingControl(
@@ -482,6 +483,39 @@ final class SettingsWindowController: NSWindowController {
             cursorControls[row.0] = control
             stack.addArrangedSubview(control.row(title: row.1, description: row.2))
         }
+
+        let haloColorLabel = NSTextField(labelWithString: "Indicator color")
+        haloColorLabel.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .medium)
+        
+        let haloColorDescription = NSTextField(wrappingLabelWithString: "Color of the cursor mode indicator trail and dot.")
+        haloColorDescription.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        haloColorDescription.textColor = .secondaryLabelColor
+        haloColorDescription.maximumNumberOfLines = 2
+        
+        let haloColorLabelStack = NSStackView(views: [haloColorLabel, haloColorDescription])
+        haloColorLabelStack.orientation = .vertical
+        haloColorLabelStack.alignment = .leading
+        haloColorLabelStack.spacing = 2
+        haloColorLabelStack.widthAnchor.constraint(greaterThanOrEqualToConstant: 250).isActive = true
+
+        let colorButtonsStack = NSStackView()
+        colorButtonsStack.orientation = .horizontal
+        colorButtonsStack.spacing = 8
+        colorButtonsStack.alignment = .centerY
+
+        for color in HaloColor.allCases {
+            let button = ColorButton(haloColor: color, target: self, action: #selector(haloColorButtonTapped(_:)))
+            colorButtonsStack.addArrangedSubview(button)
+            haloColorButtons[color] = button
+        }
+        
+        let haloColorRow = NSStackView(views: [haloColorLabelStack, colorButtonsStack])
+        haloColorRow.orientation = .horizontal
+        haloColorRow.alignment = .centerY
+        haloColorRow.spacing = 16
+        haloColorRow.heightAnchor.constraint(greaterThanOrEqualToConstant: 54).isActive = true
+        
+        stack.addArrangedSubview(haloColorRow)
 
         let bindingDescription = sectionDescription(
             title: "Movement Keys",
@@ -739,11 +773,26 @@ final class SettingsWindowController: NSWindowController {
             initialSpeed: readCursor(.initialSpeed, sender: sender),
             maximumSpeed: readCursor(.maximumSpeed, sender: sender),
             accelerationPerFrame: readCursor(.accelerationPerFrame, sender: sender),
-            frameRate: currentSettings.frameRate
+            frameRate: currentSettings.frameRate,
+            haloColor: currentSettings.haloColor
         )
         onCursorSettingsChange(settings)
         refreshCursorSettingsControls(with: settings)
         showMessage("Updated cursor-control tuning.", isError: false)
+    }
+
+    @objc private func haloColorButtonTapped(_ sender: ColorButton) {
+        let currentSettings = cursorSettingsProvider()
+        let settings = CursorSettings(
+            initialSpeed: currentSettings.initialSpeed,
+            maximumSpeed: currentSettings.maximumSpeed,
+            accelerationPerFrame: currentSettings.accelerationPerFrame,
+            frameRate: currentSettings.frameRate,
+            haloColor: sender.haloColor
+        )
+        onCursorSettingsChange(settings)
+        refreshCursorSettingsControls(with: settings)
+        showMessage("Updated indicator color.", isError: false)
     }
 
     private func readScroll(_ key: ScrollSettingKey, sender: Any?) -> Double {
@@ -770,6 +819,9 @@ final class SettingsWindowController: NSWindowController {
         cursorControls[.maximumSpeed]?.setValue(settings.maximumSpeed)
         cursorControls[.accelerationPerFrame]?.setValue(settings.accelerationPerFrame)
         cursorControls[.frameRate]?.setValue(settings.frameRate)
+        for (color, button) in haloColorButtons {
+            button.isSelectedColor = (color == settings.haloColor)
+        }
     }
 
     private func showMessage(_ message: String, isError: Bool) {
@@ -814,5 +866,51 @@ final class SettingsWindowController: NSWindowController {
         stopRecordingEventMonitor()
         onRecordingStateChanged(false)
         showMessage("Recording cancelled.", isError: false)
+    }
+}
+
+private class ColorButton: NSButton {
+    let haloColor: HaloColor
+    var isSelectedColor: Bool = false {
+        didSet { needsDisplay = true }
+    }
+    
+    init(haloColor: HaloColor, target: AnyObject?, action: Selector?) {
+        self.haloColor = haloColor
+        super.init(frame: NSRect(x: 0, y: 0, width: 24, height: 24))
+        self.target = target
+        self.action = action
+        self.isBordered = false
+        self.bezelStyle = .regularSquare
+        self.setButtonType(.momentaryPushIn)
+        self.toolTip = haloColor.displayName
+        
+        self.widthAnchor.constraint(equalToConstant: 24).isActive = true
+        self.heightAnchor.constraint(equalToConstant: 24).isActive = true
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func draw(_ dirtyRect: NSRect) {
+        let size = min(bounds.width, bounds.height)
+        let rect = NSRect(x: (bounds.width - size) / 2, y: (bounds.height - size) / 2, width: size, height: size)
+        
+        let path = NSBezierPath(ovalIn: rect.insetBy(dx: 3, dy: 3))
+        haloColor.nsColor.setFill()
+        path.fill()
+        
+        if isSelectedColor {
+            let strokePath = NSBezierPath(ovalIn: rect.insetBy(dx: 1, dy: 1))
+            NSColor.controlAccentColor.setStroke()
+            strokePath.lineWidth = 2.0
+            strokePath.stroke()
+        } else {
+            let strokePath = NSBezierPath(ovalIn: rect.insetBy(dx: 3, dy: 3))
+            NSColor.separatorColor.withAlphaComponent(0.5).setStroke()
+            strokePath.lineWidth = 1.0
+            strokePath.stroke()
+        }
     }
 }

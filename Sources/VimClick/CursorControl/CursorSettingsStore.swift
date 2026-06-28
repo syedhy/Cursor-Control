@@ -22,7 +22,8 @@ final class CursorSettingsStore {
             initialSpeed: decoded.initialSpeed,
             maximumSpeed: decoded.maximumSpeed,
             accelerationPerFrame: decoded.accelerationPerFrame,
-            frameRate: decoded.frameRate
+            frameRate: decoded.frameRate,
+            haloColor: decoded.haloColor
         )
     }
 

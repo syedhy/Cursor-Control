@@ -31,7 +31,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             settingsProvider: { cursorSettingsStore.load() }
         )
         self.cursorControlService = cursorControlService
-        let cursorModeIndicatorController = CursorModeIndicatorController()
+        let cursorModeIndicatorController = CursorModeIndicatorController(
+            settingsProvider: { cursorSettingsStore.load() }
+        )
         self.cursorModeIndicatorController = cursorModeIndicatorController
 
         let shortcutCoordinator = ShortcutCoordinator()

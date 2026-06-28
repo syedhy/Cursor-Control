@@ -1,5 +1,33 @@
 import Foundation
+import AppKit
 
+enum HaloColor: String, Codable, CaseIterable {
+    case blue
+    case yellow
+    case red
+    case black
+    case white
+    
+    var nsColor: NSColor {
+        switch self {
+        case .blue: return .systemBlue
+        case .yellow: return .systemYellow
+        case .red: return .systemRed
+        case .black: return .black
+        case .white: return .white
+        }
+    }
+    
+    var displayName: String {
+        switch self {
+        case .blue: return "Blue"
+        case .yellow: return "Yellow"
+        case .red: return "Red"
+        case .black: return "Black"
+        case .white: return "White"
+        }
+    }
+}
 struct CursorSettings: Codable, Equatable {
     static let minimumInitialSpeed = 0.01
     static let maximumInitialSpeed = 80.0
@@ -14,12 +42,14 @@ struct CursorSettings: Codable, Equatable {
     var maximumSpeed: Double
     var accelerationPerFrame: Double
     var frameRate: Double
+    var haloColor: HaloColor
 
     init(
         initialSpeed: Double = AppConstants.defaultCursorInitialSpeed,
         maximumSpeed: Double = AppConstants.defaultCursorMaximumSpeed,
         accelerationPerFrame: Double = AppConstants.defaultCursorAccelerationPerFrame,
-        frameRate: Double = AppConstants.defaultCursorFrameRate
+        frameRate: Double = AppConstants.defaultCursorFrameRate,
+        haloColor: HaloColor = .blue
     ) {
         let clampedInitialSpeed = min(
             max(initialSpeed, Self.minimumInitialSpeed),
@@ -38,5 +68,6 @@ struct CursorSettings: Codable, Equatable {
             max(frameRate, Self.minimumFrameRate),
             Self.maximumFrameRate
         )
+        self.haloColor = haloColor
     }
 }

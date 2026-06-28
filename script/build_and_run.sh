@@ -67,9 +67,17 @@ cat >"$INFO_PLIST" <<PLIST
   <true/>
   <key>NSPrincipalClass</key>
   <string>NSApplication</string>
+  <key>CFBundleVersion</key>
+  <string>1.0</string>
+  <key>CFBundleShortVersionString</key>
+  <string>1.0</string>
+  <key>CFBundleSignature</key>
+  <string>????</string>
 </dict>
 </plist>
 PLIST
+
+echo -n "APPL????" > "$APP_CONTENTS/PkgInfo"
 
 # Keep one designated identity so macOS Accessibility trust survives local rebuilds.
 /usr/bin/codesign \
@@ -79,6 +87,9 @@ PLIST
   --requirements "=designated => identifier \"$BUNDLE_ID\"" \
   "$APP_BUNDLE"
 /usr/bin/codesign --verify --deep --strict "$APP_BUNDLE"
+
+echo "Copying to /Applications..."
+rsync -a --delete "$APP_BUNDLE" /Applications/
 
 open_app() {
   /usr/bin/open -n "$APP_BUNDLE"

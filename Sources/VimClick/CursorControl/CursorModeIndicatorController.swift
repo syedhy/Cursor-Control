@@ -5,6 +5,11 @@ final class CursorModeIndicatorController {
     private var window: NSWindow?
     private var updateTimer: Timer?
     private var trailPoints: [CGPoint] = []
+    private let settingsProvider: () -> CursorSettings
+
+    init(settingsProvider: @escaping () -> CursorSettings = { CursorSettings() }) {
+        self.settingsProvider = settingsProvider
+    }
 
     func show() {
         let overlayFrame = Self.overlayFrame()
@@ -103,6 +108,7 @@ final class CursorModeIndicatorController {
 
         if let indicatorView = window.contentView as? CursorModeIndicatorView {
             let windowOrigin = window.frame.origin
+            indicatorView.haloColor = settingsProvider().haloColor.nsColor
             indicatorView.trailPoints = trailPoints.map {
                 CGPoint(x: $0.x - windowOrigin.x, y: $0.y - windowOrigin.y)
             }
@@ -144,6 +150,12 @@ final class CursorModeIndicatorController {
 }
 
 private final class CursorModeIndicatorView: NSView {
+    var haloColor: NSColor = .systemBlue {
+        didSet {
+            if haloColor != oldValue { needsDisplay = true }
+        }
+    }
+    
     var trailPoints: [CGPoint] = [] {
         didSet {
             needsDisplay = true
@@ -224,7 +236,7 @@ private final class CursorModeIndicatorView: NSView {
         segment.lineCapStyle = .round
         segment.lineJoinStyle = .round
 
-        NSColor.systemBlue.withAlphaComponent(alpha).setStroke()
+        haloColor.withAlphaComponent(alpha).setStroke()
         segment.lineWidth = lineWidth
         segment.stroke()
     }
@@ -233,7 +245,7 @@ private final class CursorModeIndicatorView: NSView {
         guard let currentPoint = trailPoints.last else { return }
 
         let haloSize = AppConstants.cursorModeIndicatorHaloSize
-        NSColor.systemBlue.withAlphaComponent(0.18).setFill()
+        haloColor.withAlphaComponent(0.18).setFill()
         NSBezierPath(
             ovalIn: CGRect(
                 x: currentPoint.x - haloSize / 2,
@@ -244,7 +256,7 @@ private final class CursorModeIndicatorView: NSView {
         ).fill()
 
         let dotSize = AppConstants.cursorModeIndicatorDotSize
-        NSColor.systemBlue.withAlphaComponent(0.88).setFill()
+        haloColor.withAlphaComponent(0.88).setFill()
         NSBezierPath(
             ovalIn: CGRect(
                 x: currentPoint.x - dotSize / 2,
