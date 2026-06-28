@@ -3,24 +3,24 @@
 import PackageDescription
 
 let package = Package(
-    name: "VimClick",
+    name: "CursorControl",
     platforms: [
         .macOS(.v13)
     ],
     products: [
-        .executable(name: "VimClick", targets: ["VimClick"])
+        .executable(name: "CursorControl", targets: ["CursorControl"])
     ],
     targets: [
         .executableTarget(
-            name: "VimClick",
-            path: "Sources/VimClick",
+            name: "CursorControl",
+            path: "Sources/CursorControl",
             resources: [
                 .copy("Resources")
             ]
         ),
         .testTarget(
-            name: "VimClickTests",
-            dependencies: ["VimClick"]
+            name: "CursorControlTests",
+            dependencies: ["CursorControl"]
         )
     ]
 )

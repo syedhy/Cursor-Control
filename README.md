@@ -1,10 +1,10 @@
-# VimClick
+# Cursor Control
 
-VimClick is an open-source, native macOS menu bar utility for controlling the
+Cursor Control is an open-source, native macOS menu bar utility for controlling the
 mouse cursor and scrolling with the keyboard.
 
 > [!NOTE]
-> VimClick is under active development. The current app is focused on two core
+> Cursor Control is under active development. The current app is focused on two core
 > features: Vim-style cursor control and universal scrolling.
 
 ## Goals
@@ -24,9 +24,9 @@ mouse cursor and scrolling with the keyboard.
 ## Build from source
 
 The build script is developer tooling only; downloaded releases will not ask
-users to run it. It produces a normal `VimClick.app` bundle that can be opened
+users to run it. It produces a normal `Cursor Control.app` bundle that can be opened
 from Finder like any other macOS application. Once built, that app can be
-reopened directly without rerunning the script. VimClick runs only in the menu
+reopened directly without rerunning the script. Cursor Control runs only in the menu
 bar—there is no main window and no Dock icon.
 
 Clone the repository, then run:
@@ -35,7 +35,7 @@ Clone the repository, then run:
 ./script/build_and_run.sh
 ```
 
-The script builds the Swift package, creates `dist/VimClick.app`, and opens it.
+The script builds the Swift package, creates `dist/Cursor Control.app`, and opens it.
 You can also build without launching:
 
 ```bash
@@ -47,10 +47,10 @@ swift build
 A downloadable DMG will be published through GitHub Releases once release
 packaging is complete. The intended installation flow is:
 
-1. Download `VimClick.dmg` from the repository's Releases page.
+1. Download `Cursor Control.dmg` from the repository's Releases page.
 2. Open the DMG.
-3. Drag VimClick into Applications.
-4. Open VimClick from Applications.
+3. Drag Cursor Control into Applications.
+4. Open Cursor Control from Applications.
 5. Grant Accessibility access when prompted.
 
 During development, `./script/build_and_run.sh` creates a local app bundle in
@@ -59,15 +59,15 @@ the script only needs to be run again when rebuilding the source.
 
 ## Usage
 
-Opening `VimClick.app` adds a cursor icon to the macOS menu bar. It does not
+Opening `Cursor Control.app` adds a cursor icon to the macOS menu bar. It does not
 open a main application window or appear in the Dock.
 
 The menu bar menu contains:
 
 - **Cursor Control Mode** — enter or exit keyboard cursor-control mode
-- **How to Use VimClick…** — open the onboarding guide
+- **How to Use Cursor Control…** — open the onboarding guide
 - **Settings…** — configure shortcuts, scrolling, and cursor movement
-- **Quit VimClick** — exit the application
+- **Quit Cursor Control** — exit the application
 
 ### Cursor Control Mode
 
@@ -78,6 +78,8 @@ is active:
 - **H/J/K/L** move the real cursor left, down, up, and right
 - Holding movement keys accelerates smoothly
 - Holding two movement keys moves diagonally
+- Hold **Shift** to hold the left mouse button down, move with **H/J/K/L**, then
+  release **Shift** to drop or stop drawing
 - **Return** left-clicks at the current cursor location
 - Press **Return** twice quickly to double-click
 - **Shift-Return** or **Control-Return** right-clicks
@@ -108,30 +110,31 @@ defaults. It has separate sections for shortcuts, scrolling, and cursor
 control. Cursor-control tuning includes initial speed, maximum speed,
 and acceleration so users can balance precise single-tap movement with fast
 corner-to-corner travel. Movement keys such as **H/J/K/L** are configurable.
-Click controls such as **Return**, double **Return**, **Shift-Return**, and
-**Control-Return** are fixed and are not exposed as settings.
+Mouse controls such as **Return**, double **Return**, **Shift-Return**,
+**Control-Return**, and **hold Shift to drag** are fixed and are not exposed as
+settings.
 
 ## Accessibility permission
 
-VimClick requires Accessibility permission to synthesize keyboard-requested
+Cursor Control requires Accessibility permission to synthesize keyboard-requested
 input events: cursor movement, clicks, and universal scrolling. If access is
-missing, VimClick explains why it is needed and can open the correct System
+missing, Cursor Control explains why it is needed and can open the correct System
 Settings pane.
 
 Permission can be granted in **System Settings → Privacy & Security →
-Accessibility**. VimClick checks the native event-posting permission whenever
+Accessibility**. Cursor Control checks the native event-posting permission whenever
 the app becomes active and does not repeatedly show permission guidance for
 every attempted click. It uses this access only to perform input explicitly
 requested by the user.
 
-If VimClick remains untrusted after it is enabled, remove the existing VimClick
+If Cursor Control remains untrusted after it is enabled, remove the existing Cursor Control
 entry with the minus button, reopen the current app, and grant access again.
 This one-time reset may be necessary when replacing an older development build
 that used a different local code-signing identity.
 
 ## Gatekeeper
 
-Early GitHub Releases may be unsigned because building VimClick does not
+Early GitHub Releases may be unsigned because building Cursor Control does not
 require Apple Developer Program membership. macOS may warn that it cannot
 verify the developer. If you trust the downloaded release, Control-click the
 app and choose **Open**, or allow it from **System Settings → Privacy & Security**.
@@ -164,7 +167,7 @@ scrolling, settings, and onboarding are complete.
 ## Project structure
 
 ```text
-Sources/VimClick/
+Sources/CursorControl/
 ├── Accessibility/ Accessibility permission guidance
 ├── Application/   App lifecycle
 ├── CursorControl/ Vim-style real cursor movement
@@ -185,4 +188,4 @@ macOS, and free from unnecessary dependencies.
 
 ## License
 
-VimClick is available under the [MIT License](LICENSE).
+Cursor Control is available under the [MIT License](LICENSE).
