@@ -39,7 +39,7 @@ private enum CursorSettingKey {
 }
 
 @MainActor
-private final class NumericSettingControl {
+private final class NumericSettingControl: NSObject, NSTextFieldDelegate {
     let slider: NSSlider
     let field: NSTextField
     let isInteger: Bool
@@ -74,6 +74,22 @@ private final class NumericSettingControl {
         field.action = action
         field.alignment = .right
         field.widthAnchor.constraint(equalToConstant: 86).isActive = true
+
+        super.init()
+        field.delegate = self
+    }
+
+    func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        if commandSelector == #selector(NSResponder.insertNewline(_:)) {
+            // Apply value immediately
+            if let target = field.target, let action = field.action {
+                NSApp.sendAction(action, to: target, from: field)
+            }
+            // Remove focus
+            field.window?.makeFirstResponder(nil)
+            return true
+        }
+        return false
     }
 
     func row(title: String, description: String) -> NSView {
