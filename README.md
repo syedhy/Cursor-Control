@@ -8,14 +8,50 @@ Cursor Control is a native macOS menu bar app for moving the mouse cursor,
 clicking, dragging, and scrolling with the keyboard. It is built with AppKit,
 has no web runtime, and stays out of the Dock.
 
-> [!NOTE]
-> Cursor Control releases are ad-hoc signed and not Apple-notarized because the
-> project is distributed without an Apple Developer Program account. macOS may
-> require approving the app from Privacy & Security on first launch.
+## Before You Install
+
+Cursor Control is currently ad-hoc signed and not Apple-notarized because it is
+distributed without an Apple Developer Program account.
+
+On first launch, macOS may show a warning such as:
+
+```text
+Apple could not verify "Cursor Control.app" is free of malware that may harm your Mac or compromise your privacy.
+```
+
+Depending on your macOS version, the dialog may offer **Done**, **Cancel**, or
+**Move to Trash**. Do not click **Move to Trash** if you want to use the app.
+
+To open Cursor Control:
+
+1. Click **Done** or **Cancel** on the warning.
+2. Open **System Settings**.
+3. Go to **Privacy & Security**.
+4. Scroll to the message about `Cursor Control.app`.
+5. Click **Open Anyway**.
+6. Confirm **Open**.
+
+Some macOS versions may also allow Control-clicking `Cursor Control.app` in
+Applications and choosing **Open**, but **Privacy & Security > Open Anyway** is
+the most reliable method.
+
+Only install Cursor Control from this repository's GitHub Releases page or the
+official Homebrew tap.
 
 ## Install
 
-### Homebrew
+### Option 1: GitHub Release ZIP
+
+1. Download `CursorControl-1.0.0-macOS.zip` from the [latest release](https://github.com/syedhy/Cursor-Control/releases/latest).
+2. Unzip it.
+3. Move `Cursor Control.app` to the Applications folder.
+4. Open `Cursor Control.app`.
+5. Follow the first-launch steps above if macOS blocks it.
+6. Grant Accessibility access when prompted.
+
+### Option 2: Homebrew
+
+This option requires [Homebrew](https://brew.sh/) to be installed first.
 
 ```bash
 brew tap syedhy/cursor-control
@@ -23,58 +59,40 @@ brew trust --cask syedhy/cursor-control/cursor-control
 brew install --cask syedhy/cursor-control/cursor-control
 ```
 
-### GitHub Release
+The cask installs the same GitHub Release ZIP and verifies it with the checksum
+stored in the cask.
 
-1. Download `CursorControl-1.0.0-macOS.zip` from the [latest release](https://github.com/syedhy/Cursor-Control/releases/latest).
-2. Unzip it.
-3. Move `Cursor Control.app` to the Applications folder.
-4. Open `Cursor Control.app`.
-5. If macOS blocks the app, open **System Settings > Privacy & Security** and click **Open Anyway** for Cursor Control.
-6. Grant Accessibility access when prompted.
+## What It Does
 
-Some macOS versions may also allow Control-clicking `Cursor Control.app` in
-Applications and choosing **Open**.
-
-## Includes
-
-- Vim-style cursor movement with **H/J/K/L**
-- Keyboard click, double-click, right-click, and Shift-drag support
-- Universal scrolling with **Control-H/J/K/L**
-- Configurable global shortcuts, movement keys, scroll tuning, and cursor speed
-- Menu bar only presence with onboarding and settings windows
-- GitHub Release zip and Homebrew cask distribution
-
-## Goals
-
-- Native AppKit interface with no web runtime
-- Fast, keyboard-first cursor movement and scrolling
-- Lightweight menu bar presence
-- Clear, maintainable architecture
-- Straightforward GitHub Releases distribution
+- Move the cursor with **H/J/K/L**
+- Scroll with **Control-H/J/K/L**
+- Left-click, double-click, right-click, and Shift-drag from the keyboard
+- Configure global shortcuts, movement keys, scroll behavior, and cursor speed
+- Run quietly from the menu bar with onboarding and settings windows
 
 ## Requirements
 
 - macOS 13 Ventura or later
-- Xcode 15 or later, or the matching Xcode Command Line Tools
-- Swift 6 compatible toolchain
+- Accessibility permission, granted by the user after opening the app
+
+Building from source also requires Xcode 15 or later, or matching Xcode Command
+Line Tools with a Swift 6 compatible toolchain.
 
 ## Usage
 
-Opening `Cursor Control.app` adds a cursor icon to the macOS menu bar. It does not
-open a main application window or appear in the Dock.
+Opening `Cursor Control.app` adds a cursor icon to the macOS menu bar. It does
+not open a main window or appear in the Dock.
 
 The menu bar menu contains:
 
-- **Cursor Control Mode** — enter or exit keyboard cursor-control mode
-- **How to Use Cursor Control…** — open the onboarding guide
-- **Settings…** — configure shortcuts, scrolling, and cursor movement
-- **Quit Cursor Control** — exit the application
+- **Cursor Control Mode**: enter or exit keyboard cursor-control mode
+- **How to Use Cursor Control...**: open the onboarding guide
+- **Settings...**: configure shortcuts, scrolling, and cursor movement
+- **Quit Cursor Control**: exit the app
 
 ### Cursor Control Mode
 
-Cursor Control Mode lets you move the visible mouse cursor directly from the
-keyboard. Press **Option-W** by default to enter or exit cursor mode. While it
-is active:
+Press **Option-W** by default to enter or exit cursor mode. While it is active:
 
 - **H/J/K/L** move the real cursor left, down, up, and right
 - Holding movement keys accelerates smoothly
@@ -85,69 +103,32 @@ is active:
 - Press **Return** twice quickly to double-click
 - **Shift-Return** or **Control-Return** right-clicks
 
-Cursor mode stays active after clicks. Toggle cursor mode off with the shortcut
-when you want normal typing, then toggle it back on when you want keyboard mouse
-control again.
+Cursor mode stays active after clicks. Toggle it off when you want normal
+typing, then toggle it back on when you want keyboard mouse control again.
 
 ### Scrolling
 
-Scrolling works globally without opening any extra window. Press
+Scrolling works globally without opening another window. Press
 **Control-H/J/K/L** to scroll left, down, up, and right in the frontmost app.
 
-Scroll shortcuts also work while Cursor Control Mode is active.
+Settings lets you tune scroll distance, scroll events per repeat, hold
+acceleration, and acceleration cap.
 
-Settings lets you tune the scroll distance from single-pixel movement up to
-fast movement, the number of scroll events per repeat, hold acceleration, and
-acceleration cap.
+## Accessibility Permission
 
-## Default global shortcuts
+Cursor Control needs Accessibility permission to send keyboard-requested input
+events: cursor movement, clicks, dragging, and scrolling.
 
-- **Option-W** — enter or exit cursor-control mode
-- **Control-H/J/K/L** — scroll left/down/up/right in the frontmost app
+It uses this permission only for actions you explicitly request from the
+keyboard. If access is missing, Cursor Control explains why it is needed and can
+open the correct System Settings pane.
 
-Settings supports recording new global shortcuts, rejecting duplicates,
-persisting changes, recovering from registration failures, and restoring
-defaults. It has separate sections for shortcuts, scrolling, and cursor
-control. Cursor-control tuning includes initial speed, maximum speed,
-and acceleration so users can balance precise single-tap movement with fast
-corner-to-corner travel. Movement keys such as **H/J/K/L** are configurable.
-Mouse controls such as **Return**, double **Return**, **Shift-Return**,
-**Control-Return**, and **hold Shift to drag** are fixed and are not exposed as
-settings.
+If Cursor Control remains untrusted after you enable it, remove the existing
+Cursor Control entry in **System Settings > Privacy & Security > Accessibility**,
+reopen the current app, and grant access again. This can happen when replacing an
+older local build that used a different signing identity.
 
-## Accessibility permission
-
-Cursor Control requires Accessibility permission to synthesize keyboard-requested
-input events: cursor movement, clicks, and universal scrolling. If access is
-missing, Cursor Control explains why it is needed and can open the correct System
-Settings pane.
-
-Permission can be granted in **System Settings → Privacy & Security →
-Accessibility**. Cursor Control checks the native event-posting permission whenever
-the app becomes active and does not repeatedly show permission guidance for
-every attempted click. It uses this access only to perform input explicitly
-requested by the user.
-
-If Cursor Control remains untrusted after it is enabled, remove the existing Cursor Control
-entry with the minus button, reopen the current app, and grant access again.
-This one-time reset may be necessary when replacing an older development build
-that used a different local code-signing identity.
-
-## Gatekeeper
-
-GitHub Releases are ad-hoc signed and not Apple-notarized because Cursor Control
-is distributed without an Apple Developer Program account. macOS may warn that
-it cannot verify the developer. If you trust the downloaded release, allow it
-from **System Settings → Privacy & Security**, or Control-click the app and
-choose **Open** if that option is available.
-
-Never bypass Gatekeeper for an app obtained from an untrusted source.
-
-## Build from source
-
-The build script is developer tooling only; downloaded releases do not ask users
-to run it. It produces a normal `Cursor Control.app` bundle that can be opened
-from Finder like any other macOS application.
+## Build From Source
 
 Clone the repository, then run:
 
@@ -156,25 +137,17 @@ Clone the repository, then run:
 ```
 
 The script builds the Swift package, creates `dist/Cursor Control.app`, copies it
-to Applications, and opens it. You can also build without launching:
+to Applications, and opens it.
+
+You can also build without launching:
 
 ```bash
 swift build
 ```
 
-## Roadmap
+## Releasing
 
-- [x] Phase 1 — AppKit menu bar foundation and repository setup
-- [x] Cursor Control — Vim-style real cursor movement
-- [x] Universal Scrolling — four-direction keyboard scrolling
-- [x] Settings — shortcut, scroll, and cursor tuning
-- [x] Onboarding — built-in quick-start guide
-- [x] Release Preparation — zip packaging and Homebrew cask preparation
-
-## GitHub Releases
-
-Release artifacts are attached to tagged GitHub Releases. Maintainers can create
-and verify a release package with:
+Maintainers can create and verify a release package with:
 
 ```bash
 VERSION=1.0.0 ./script/package_release.sh
@@ -184,13 +157,13 @@ VERSION=1.0.0 ./script/generate_homebrew_cask.sh
 
 See [RELEASING.md](RELEASING.md) for the full release checklist.
 
-## Project structure
+## Project Structure
 
 ```text
 Sources/CursorControl/
 ├── Accessibility/ Accessibility permission guidance
 ├── Application/   App lifecycle
-├── CursorControl/ Vim-style real cursor movement
+├── CursorControl/ Keyboard cursor movement
 ├── Keyboard/      Global shortcuts and key capture
 ├── MenuBar/       Status item and menu ownership
 ├── Mouse/         Native mouse clicking
@@ -198,8 +171,8 @@ Sources/CursorControl/
 ├── Scroll/        Universal scroll event targeting and posting
 ├── Settings/      Settings window
 └── Support/       Shared application constants
-script/            Build and run tooling
-packaging/         Generated Homebrew cask output
+script/            Build and release tooling
+packaging/         Homebrew cask output
 ```
 
 ## Contributing
