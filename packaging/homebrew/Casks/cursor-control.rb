@@ -7,7 +7,7 @@ cask "cursor-control" do
   desc "Keyboard-driven cursor movement and scrolling for macOS"
   homepage "https://github.com/syedhy/Cursor-Control"
 
-  depends_on macos: ">= :ventura"
+  depends_on macos: :ventura
 
   app "CursorControl-#{version}-macOS/Cursor Control.app"
 
