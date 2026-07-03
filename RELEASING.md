@@ -14,8 +14,11 @@ dist/
     Cursor Control.app
     README_INSTALL.txt
   CursorControl-1.0.0-macOS.zip
-  CursorControl-1.0.0-macOS.zip.sha256
 ```
+
+The packaging script also writes `CursorControl-1.0.0-macOS.zip.sha256` for
+local maintainer verification. It does not need to be uploaded to GitHub
+Releases because the Homebrew cask embeds the required SHA-256 checksum.
 
 ## Build And Verify
 
@@ -53,7 +56,6 @@ Create a GitHub Release for the tag and upload:
 
 ```text
 dist/CursorControl-1.0.0-macOS.zip
-dist/CursorControl-1.0.0-macOS.zip.sha256
 ```
 
 ## Homebrew Cask
@@ -81,14 +83,12 @@ If the tap is public, users can install with:
 
 ```bash
 brew tap syedhy/cursor-control
-brew install --cask cursor-control
-```
-
-If Homebrew warns that the cask is not trusted, users may need:
-
-```bash
 brew trust --cask syedhy/cursor-control/cursor-control
+brew install --cask syedhy/cursor-control/cursor-control
 ```
+
+The fully-qualified cask path is preferred for non-official taps because it
+trusts and installs the specific cask instead of relying on short-name lookup.
 
 ## First Launch
 

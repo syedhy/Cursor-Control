@@ -64,7 +64,8 @@ Once the Homebrew tap is published, Cursor Control can be installed with:
 
 ```bash
 brew tap syedhy/cursor-control
-brew install --cask cursor-control
+brew trust --cask syedhy/cursor-control/cursor-control
+brew install --cask syedhy/cursor-control/cursor-control
 ```
 
 The cask installs the same GitHub Release zip. Because current releases are
