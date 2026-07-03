@@ -18,3 +18,9 @@ After it opens:
 
 Cursor Control runs in the menu bar. It does not show a Dock icon or main
 window. Use the menu bar icon to open the guide, settings, or quit the app.
+
+Homebrew install:
+
+brew tap syedhy/cursor-control
+brew trust --cask syedhy/cursor-control/cursor-control
+brew install --cask syedhy/cursor-control/cursor-control

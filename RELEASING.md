@@ -58,6 +58,10 @@ Create a GitHub Release for the tag and upload:
 dist/CursorControl-1.0.0-macOS.zip
 ```
 
+Use `docs/releases/v1.0.0.md` as the release body for the first public release.
+For future releases, copy that file and update the version, feature list, and
+install asset name.
+
 ## Homebrew Cask
 
 After the zip exists locally, generate the cask:

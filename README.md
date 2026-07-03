@@ -1,11 +1,48 @@
 # Cursor Control
 
-Cursor Control is an open-source, native macOS menu bar utility for controlling the
-mouse cursor and scrolling with the keyboard.
+[![Release](https://img.shields.io/github/v/release/syedhy/Cursor-Control?label=release)](https://github.com/syedhy/Cursor-Control/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![macOS](https://img.shields.io/badge/macOS-13%2B-lightgrey.svg)](#requirements)
+
+Cursor Control is a native macOS menu bar app for moving the mouse cursor,
+clicking, dragging, and scrolling with the keyboard. It is built with AppKit,
+has no web runtime, and stays out of the Dock.
 
 > [!NOTE]
-> Cursor Control is under active development. The current app is focused on two core
-> features: Vim-style cursor control and universal scrolling.
+> Cursor Control releases are ad-hoc signed and not Apple-notarized because the
+> project is distributed without an Apple Developer Program account. macOS may
+> require approving the app from Privacy & Security on first launch.
+
+## Install
+
+### Homebrew
+
+```bash
+brew tap syedhy/cursor-control
+brew trust --cask syedhy/cursor-control/cursor-control
+brew install --cask syedhy/cursor-control/cursor-control
+```
+
+### GitHub Release
+
+1. Download `CursorControl-1.0.0-macOS.zip` from the [latest release](https://github.com/syedhy/Cursor-Control/releases/latest).
+2. Unzip it.
+3. Move `Cursor Control.app` to the Applications folder.
+4. Open `Cursor Control.app`.
+5. If macOS blocks the app, open **System Settings > Privacy & Security** and click **Open Anyway** for Cursor Control.
+6. Grant Accessibility access when prompted.
+
+Some macOS versions may also allow Control-clicking `Cursor Control.app` in
+Applications and choosing **Open**.
+
+## Includes
+
+- Vim-style cursor movement with **H/J/K/L**
+- Keyboard click, double-click, right-click, and Shift-drag support
+- Universal scrolling with **Control-H/J/K/L**
+- Configurable global shortcuts, movement keys, scroll tuning, and cursor speed
+- Menu bar only presence with onboarding and settings windows
+- GitHub Release zip and Homebrew cask distribution
 
 ## Goals
 
@@ -20,57 +57,6 @@ mouse cursor and scrolling with the keyboard.
 - macOS 13 Ventura or later
 - Xcode 15 or later, or the matching Xcode Command Line Tools
 - Swift 6 compatible toolchain
-
-## Build from source
-
-The build script is developer tooling only; downloaded releases will not ask
-users to run it. It produces a normal `Cursor Control.app` bundle that can be opened
-from Finder like any other macOS application. Once built, that app can be
-reopened directly without rerunning the script. Cursor Control runs only in the menu
-bar—there is no main window and no Dock icon.
-
-Clone the repository, then run:
-
-```bash
-./script/build_and_run.sh
-```
-
-The script builds the Swift package, creates `dist/Cursor Control.app`, and opens it.
-You can also build without launching:
-
-```bash
-swift build
-```
-
-## Installation
-
-Versioned zip files are published through GitHub Releases. The intended
-installation flow is:
-
-1. Download `CursorControl-<version>-macOS.zip` from the repository's Releases page.
-2. Unzip the archive.
-3. Move `Cursor Control.app` into Applications.
-4. Open Cursor Control from Applications.
-5. If macOS blocks the app, use **System Settings > Privacy & Security > Open Anyway**.
-6. Grant Accessibility access when prompted.
-
-During development, `./script/build_and_run.sh` creates a local app bundle in
-`dist/` instead. That app bundle runs independently after it has been built;
-the script only needs to be run again when rebuilding the source.
-
-### Homebrew
-
-Once the Homebrew tap is published, Cursor Control can be installed with:
-
-```bash
-brew tap syedhy/cursor-control
-brew trust --cask syedhy/cursor-control/cursor-control
-brew install --cask syedhy/cursor-control/cursor-control
-```
-
-The cask installs the same GitHub Release zip. Because current releases are
-ad-hoc signed and not Apple-notarized, Homebrew or macOS may require trusting
-the cask and approving first launch in Privacy & Security.
 
 ## Usage
 
@@ -157,13 +143,24 @@ choose **Open** if that option is available.
 
 Never bypass Gatekeeper for an app obtained from an untrusted source.
 
-## Screenshots
+## Build from source
 
-_Screenshots will be added before the first release._
+The build script is developer tooling only; downloaded releases do not ask users
+to run it. It produces a normal `Cursor Control.app` bundle that can be opened
+from Finder like any other macOS application.
 
-## Demo GIF
+Clone the repository, then run:
 
-_A keyboard-driven usage demo will be added before the first release._
+```bash
+./script/build_and_run.sh
+```
+
+The script builds the Swift package, creates `dist/Cursor Control.app`, copies it
+to Applications, and opens it. You can also build without launching:
+
+```bash
+swift build
+```
 
 ## Roadmap
 
