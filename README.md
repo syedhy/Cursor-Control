@@ -44,18 +44,32 @@ swift build
 
 ## Installation
 
-A downloadable DMG will be published through GitHub Releases once release
-packaging is complete. The intended installation flow is:
+Versioned zip files are published through GitHub Releases. The intended
+installation flow is:
 
-1. Download `Cursor Control.dmg` from the repository's Releases page.
-2. Open the DMG.
-3. Drag Cursor Control into Applications.
+1. Download `CursorControl-<version>-macOS.zip` from the repository's Releases page.
+2. Unzip the archive.
+3. Move `Cursor Control.app` into Applications.
 4. Open Cursor Control from Applications.
-5. Grant Accessibility access when prompted.
+5. If macOS blocks the app, use **System Settings > Privacy & Security > Open Anyway**.
+6. Grant Accessibility access when prompted.
 
 During development, `./script/build_and_run.sh` creates a local app bundle in
 `dist/` instead. That app bundle runs independently after it has been built;
 the script only needs to be run again when rebuilding the source.
+
+### Homebrew
+
+Once the Homebrew tap is published, Cursor Control can be installed with:
+
+```bash
+brew tap syedhy/cursor-control
+brew install --cask cursor-control
+```
+
+The cask installs the same GitHub Release zip. Because current releases are
+ad-hoc signed and not Apple-notarized, Homebrew or macOS may require trusting
+the cask and approving first launch in Privacy & Security.
 
 ## Usage
 
@@ -134,10 +148,11 @@ that used a different local code-signing identity.
 
 ## Gatekeeper
 
-Early GitHub Releases may be unsigned because building Cursor Control does not
-require Apple Developer Program membership. macOS may warn that it cannot
-verify the developer. If you trust the downloaded release, Control-click the
-app and choose **Open**, or allow it from **System Settings → Privacy & Security**.
+GitHub Releases are ad-hoc signed and not Apple-notarized because Cursor Control
+is distributed without an Apple Developer Program account. macOS may warn that
+it cannot verify the developer. If you trust the downloaded release, allow it
+from **System Settings → Privacy & Security**, or Control-click the app and
+choose **Open** if that option is available.
 
 Never bypass Gatekeeper for an app obtained from an untrusted source.
 
@@ -156,13 +171,20 @@ _A keyboard-driven usage demo will be added before the first release._
 - [x] Universal Scrolling — four-direction keyboard scrolling
 - [x] Settings — shortcut, scroll, and cursor tuning
 - [x] Onboarding — built-in quick-start guide
-- [ ] Release Preparation — DMG and GitHub Releases preparation
+- [x] Release Preparation — zip packaging and Homebrew cask preparation
 
 ## GitHub Releases
 
-Release artifacts will be attached to tagged GitHub Releases. DMG creation,
-release checks, and maintainer instructions are scheduled after cursor control,
-scrolling, settings, and onboarding are complete.
+Release artifacts are attached to tagged GitHub Releases. Maintainers can create
+and verify a release package with:
+
+```bash
+VERSION=1.0.0 ./script/package_release.sh
+VERSION=1.0.0 ./script/verify_release_package.sh
+VERSION=1.0.0 ./script/generate_homebrew_cask.sh
+```
+
+See [RELEASING.md](RELEASING.md) for the full release checklist.
 
 ## Project structure
 
@@ -179,6 +201,7 @@ Sources/CursorControl/
 ├── Settings/      Settings window
 └── Support/       Shared application constants
 script/            Build and run tooling
+packaging/         Generated Homebrew cask output
 ```
 
 ## Contributing
