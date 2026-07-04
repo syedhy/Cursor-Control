@@ -178,7 +178,7 @@ packaging/         Homebrew cask output
 ## Contributing
 
 Issues and pull requests are welcome. Please keep changes focused, native to
-macOS, and free from unnecessary dependencies.
+macOS, and free from unnecessary dependencies
 
 ## License
 
