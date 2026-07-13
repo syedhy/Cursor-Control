@@ -4,6 +4,7 @@ enum ShortcutIdentifier: String, CaseIterable, Codable, Hashable {
     case scrollDown
     case scrollUp
     case scrollRight
+    case autoClicker
 
     static let eventTapHandledCases: [ShortcutIdentifier] = [
         .scrollLeft,
@@ -28,6 +29,8 @@ enum ShortcutIdentifier: String, CaseIterable, Codable, Hashable {
             return 4
         case .scrollRight:
             return 5
+        case .autoClicker:
+            return 6
         }
     }
 
@@ -43,6 +46,8 @@ enum ShortcutIdentifier: String, CaseIterable, Codable, Hashable {
             return "Scroll up"
         case .scrollRight:
             return "Scroll right"
+        case .autoClicker:
+            return "Auto clicker"
         }
     }
 
@@ -58,6 +63,8 @@ enum ShortcutIdentifier: String, CaseIterable, Codable, Hashable {
             return "Scroll the frontmost app up."
         case .scrollRight:
             return "Scroll the frontmost app right."
+        case .autoClicker:
+            return "Toggle the auto-clicker on or off."
         }
     }
 }

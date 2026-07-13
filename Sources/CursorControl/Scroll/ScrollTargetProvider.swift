@@ -8,7 +8,11 @@ protocol ScrollTargetProviding {
 
 struct FrontmostScrollTargetProvider: ScrollTargetProviding {
     var scrollLocation: CGPoint {
-        focusedWindowFrame()?.center ?? currentMouseLocation()
+        let mouseLoc = currentMouseLocation()
+        if let frame = focusedWindowFrame(), !frame.contains(mouseLoc) {
+            return frame.center
+        }
+        return mouseLoc
     }
 
     private func focusedWindowFrame() -> CGRect? {

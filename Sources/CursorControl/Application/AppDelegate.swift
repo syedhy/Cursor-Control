@@ -10,6 +10,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var scrollSettingsStore: ScrollSettingsStore?
     private var cursorSettingsStore: CursorSettingsStore?
     private var cursorMovementBindingStore: CursorMovementBindingStore?
+    private var autoClickerSettingsStore: AutoClickerSettingsStore?
+    private var autoClickerService: AutoClickerService?
     private var cursorModeIndicatorController: CursorModeIndicatorController?
     private var settingsWindowController: SettingsWindowController?
     private var shortcutCoordinator: ShortcutCoordinator?
@@ -27,6 +29,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.cursorSettingsStore = cursorSettingsStore
         let cursorMovementBindingStore = CursorMovementBindingStore()
         self.cursorMovementBindingStore = cursorMovementBindingStore
+        let autoClickerSettingsStore = AutoClickerSettingsStore()
+        self.autoClickerSettingsStore = autoClickerSettingsStore
+        let autoClickerService = AutoClickerService(
+            settingsProvider: { autoClickerSettingsStore.load() },
+            mouseClickService: MouseClickService()
+        )
+        self.autoClickerService = autoClickerService
         let cursorControlService = CursorControlService(
             settingsProvider: { cursorSettingsStore.load() }
         )
@@ -75,6 +84,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let settingsWindowController = SettingsWindowController(
+            autoClickerSettingsProvider: { [weak autoClickerSettingsStore] in
+                autoClickerSettingsStore?.load() ?? AutoClickerSettings()
+            },
+            onAutoClickerSettingsChange: { [weak autoClickerSettingsStore] settings in
+                autoClickerSettingsStore?.save(settings)
+            },
+            onRestoreAutoClickerSettingsDefaults: { [weak autoClickerSettingsStore] in
+                autoClickerSettingsStore?.restoreDefaults() ?? AutoClickerSettings()
+            },
             shortcutProvider: { [weak shortcutCoordinator] identifier in
                 shortcutCoordinator?.shortcut(for: identifier)
                     ?? KeyboardShortcuts.defaultGlobalShortcuts[identifier]!
@@ -170,6 +188,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 },
                 .scrollRight: { [weak self] repeatCount in
                     self?.scroll(.right, repeatCount: repeatCount)
+                },
+                .autoClicker: { [weak self] _ in
+                    self?.autoClickerService?.toggle()
                 }
             ],
             cursorMovementBindings: cursorMovementBindingStore.load(),

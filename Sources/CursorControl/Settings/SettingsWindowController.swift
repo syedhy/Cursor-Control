@@ -5,6 +5,7 @@ private enum SettingsSection: Int, CaseIterable {
     case scrolling
     case cursorControl
     case halo
+    case autoClicker
 
     var title: String {
         switch self {
@@ -16,6 +17,8 @@ private enum SettingsSection: Int, CaseIterable {
             return "Cursor Control"
         case .halo:
             return "Halo Settings"
+        case .autoClicker:
+            return "Auto Clicker"
         }
     }
 }
@@ -27,6 +30,10 @@ private enum ScrollSettingKey {
     case maximumAccelerationMultiplier
     case verticalMultiplier
     case horizontalMultiplier
+}
+
+private enum AutoClickerSettingKey {
+    case clicksPerSecond
 }
 
 private enum CursorSettingKey {
@@ -159,6 +166,9 @@ private final class NumericSettingControl: NSObject, NSTextFieldDelegate {
 
 @MainActor
 final class SettingsWindowController: NSWindowController {
+    private let autoClickerSettingsProvider: () -> AutoClickerSettings
+    private let onAutoClickerSettingsChange: (AutoClickerSettings) -> Void
+    private let onRestoreAutoClickerSettingsDefaults: () -> AutoClickerSettings
     private let shortcutProvider: (ShortcutIdentifier) -> KeyboardShortcut
     private let scrollSettingsProvider: () -> ScrollSettings
     private let cursorSettingsProvider: () -> CursorSettings
@@ -179,12 +189,16 @@ final class SettingsWindowController: NSWindowController {
     private var cursorMovementButtons: [CursorMovementDirection: ShortcutRecorderButton] = [:]
     private var scrollControls: [ScrollSettingKey: NumericSettingControl] = [:]
     private var cursorControls: [CursorSettingKey: NumericSettingControl] = [:]
+    private var autoClickerControls: [AutoClickerSettingKey: NumericSettingControl] = [:]
     private var recordingEventMonitor: Any?
     private var haloColorButtons: [HaloColor: ColorButton] = [:]
     private let messageLabel = NSTextField(labelWithString: "")
     private let tabView = NSTabView()
 
     init(
+        autoClickerSettingsProvider: @escaping () -> AutoClickerSettings,
+        onAutoClickerSettingsChange: @escaping (AutoClickerSettings) -> Void,
+        onRestoreAutoClickerSettingsDefaults: @escaping () -> AutoClickerSettings,
         shortcutProvider: @escaping (ShortcutIdentifier) -> KeyboardShortcut,
         scrollSettingsProvider: @escaping () -> ScrollSettings,
         cursorSettingsProvider: @escaping () -> CursorSettings,
@@ -202,6 +216,9 @@ final class SettingsWindowController: NSWindowController {
         onRestoreCursorMovementBindingsDefaults: @escaping () -> CursorMovementBindings,
         onRecordingStateChanged: @escaping (Bool) -> Void
     ) {
+        self.autoClickerSettingsProvider = autoClickerSettingsProvider
+        self.onAutoClickerSettingsChange = onAutoClickerSettingsChange
+        self.onRestoreAutoClickerSettingsDefaults = onRestoreAutoClickerSettingsDefaults
         self.shortcutProvider = shortcutProvider
         self.scrollSettingsProvider = scrollSettingsProvider
         self.cursorSettingsProvider = cursorSettingsProvider
@@ -238,6 +255,7 @@ final class SettingsWindowController: NSWindowController {
         refreshShortcutButtons()
         refreshScrollSettingsControls()
         refreshCursorSettingsControls()
+        refreshAutoClickerSettingsControls()
         refreshCursorMovementButtons()
         window.center()
         showWindow(nil)
@@ -307,6 +325,7 @@ final class SettingsWindowController: NSWindowController {
         refreshShortcutButtons()
         refreshScrollSettingsControls()
         refreshCursorSettingsControls()
+        refreshAutoClickerSettingsControls()
         refreshCursorMovementButtons()
         return container
     }
@@ -317,6 +336,7 @@ final class SettingsWindowController: NSWindowController {
         tabView.addTabViewItem(tabItem(.scrolling, view: makeScrollSettingsSection()))
         tabView.addTabViewItem(tabItem(.cursorControl, view: makeCursorSettingsSection()))
         tabView.addTabViewItem(tabItem(.halo, view: makeHaloSettingsSection()))
+        tabView.addTabViewItem(tabItem(.autoClicker, view: makeAutoClickerSettingsSection()))
         tabView.selectTabViewItem(at: 0)
     }
 
@@ -529,6 +549,34 @@ final class SettingsWindowController: NSWindowController {
             bindingStack.addArrangedSubview(makeCursorMovementRow(for: direction))
         }
         stack.addArrangedSubview(bindingStack)
+
+        return stack
+    }
+
+
+    private func makeAutoClickerSettingsSection() -> NSView {
+        let sectionLabel = sectionDescription(
+            title: "Auto Clicker",
+            body: "Configure the global auto-clicker shortcut and click rate."
+        )
+
+        let stack = NSStackView(views: [sectionLabel])
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 20
+
+        stack.addArrangedSubview(makeShortcutRow(for: .autoClicker))
+
+        let control = NumericSettingControl(
+            minimum: AutoClickerSettings.minimumClicksPerSecond,
+            maximum: AutoClickerSettings.maximumClicksPerSecond,
+            isInteger: false,
+            suffix: "clicks/sec",
+            target: self,
+            action: #selector(autoClickerSettingChanged(_:))
+        )
+        autoClickerControls[.clicksPerSecond] = control
+        stack.addArrangedSubview(control.row(title: "Click Rate", description: "How many clicks to simulate per second."))
 
         return stack
     }
@@ -802,10 +850,12 @@ final class SettingsWindowController: NSWindowController {
         let result = onRestoreDefaults()
         let scrollSettings = onRestoreScrollSettingsDefaults()
         let cursorSettings = onRestoreCursorSettingsDefaults()
+        let autoClickerSettings = onRestoreAutoClickerSettingsDefaults()
         _ = onRestoreCursorMovementBindingsDefaults()
         refreshShortcutButtons()
         refreshScrollSettingsControls(with: scrollSettings)
         refreshCursorSettingsControls(with: cursorSettings)
+        refreshAutoClickerSettingsControls(with: autoClickerSettings)
         refreshCursorMovementButtons()
 
         switch result {
@@ -843,6 +893,24 @@ final class SettingsWindowController: NSWindowController {
         onScrollSettingsChange(settings)
         refreshScrollSettingsControls(with: settings)
         showMessage("Updated scroll tuning.", isError: false)
+    }
+
+
+    @objc private func autoClickerSettingChanged(_ sender: Any) {
+        var settings = autoClickerSettingsProvider()
+        settings.clicksPerSecond = readAutoClicker(.clicksPerSecond, sender: sender)
+        onAutoClickerSettingsChange(settings)
+        refreshAutoClickerSettingsControls(with: settings)
+        showMessage("Updated auto-clicker settings.", isError: false)
+    }
+
+    private func readAutoClicker(_ key: AutoClickerSettingKey, sender: Any?) -> Double {
+        autoClickerControls[key]?.value(sender: sender) ?? 0
+    }
+
+    private func refreshAutoClickerSettingsControls(with settings: AutoClickerSettings? = nil) {
+        let settings = settings ?? autoClickerSettingsProvider()
+        autoClickerControls[.clicksPerSecond]?.setValue(settings.clicksPerSecond)
     }
 
     @objc private func cursorSettingChanged(_ sender: Any) {

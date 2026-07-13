@@ -9,6 +9,7 @@ enum MouseClickKind: Equatable {
 
 protocol MouseClicking {
     func click(_ kind: MouseClickKind, at point: CGPoint) -> Bool
+    func fastLeftClick(at point: CGPoint) -> Bool
     func beginLeftDrag(at point: CGPoint) -> Bool
     func dragLeftMouse(to point: CGPoint) -> Bool
     func endLeftDrag(at point: CGPoint) -> Bool
@@ -70,6 +71,32 @@ struct MouseClickService {
         configureSyntheticMouseEvent(mouseUp, clickState: clickState)
         mouseDown.post(tap: .cghidEventTap)
         Thread.sleep(forTimeInterval: 0.045)
+        mouseUp.post(tap: .cghidEventTap)
+        return true
+    }
+
+    func fastLeftClick(at point: CGPoint) -> Bool {
+        let eventSource = CGEventSource(stateID: .hidSystemState)
+        eventSource?.localEventsSuppressionInterval = 0
+
+        guard let mouseDown = CGEvent(
+            mouseEventSource: eventSource,
+            mouseType: .leftMouseDown,
+            mouseCursorPosition: point,
+            mouseButton: .left
+        ), let mouseUp = CGEvent(
+            mouseEventSource: eventSource,
+            mouseType: .leftMouseUp,
+            mouseCursorPosition: point,
+            mouseButton: .left
+        ) else {
+            return false
+        }
+
+        configureSyntheticMouseEvent(mouseDown, clickState: 1)
+        configureSyntheticMouseEvent(mouseUp, clickState: 1)
+        
+        mouseDown.post(tap: .cghidEventTap)
         mouseUp.post(tap: .cghidEventTap)
         return true
     }

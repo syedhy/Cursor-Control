@@ -38,6 +38,12 @@ enum KeyboardShortcuts {
             modifiers: [.control],
             keyEquivalent: "l",
             displayKey: "L"
+        ),
+        .autoClicker: KeyboardShortcut(
+            keyCode: 7,
+            modifiers: [.option, .shift],
+            keyEquivalent: "x",
+            displayKey: "X"
         )
     ]
 
