@@ -45,6 +45,10 @@ private enum CursorSettingKey {
     case haloOpacity
 }
 
+private final class FlippedView: NSView {
+    override var isFlipped: Bool { true }
+}
+
 @MainActor
 private final class NumericSettingControl: NSObject, NSTextFieldDelegate {
     let slider: NSSlider
@@ -123,8 +127,8 @@ private final class NumericSettingControl: NSObject, NSTextFieldDelegate {
         let row = NSStackView(views: [labelStack, slider, field, suffixLabel])
         row.orientation = .horizontal
         row.alignment = .centerY
-        row.spacing = 10
-        row.heightAnchor.constraint(greaterThanOrEqualToConstant: 54).isActive = true
+        row.spacing = 16
+        row.heightAnchor.constraint(greaterThanOrEqualToConstant: 64).isActive = true
         return row
     }
 
@@ -234,8 +238,8 @@ final class SettingsWindowController: NSWindowController {
         self.onRecordingStateChanged = onRecordingStateChanged
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 780, height: 720),
-            styleMask: [.titled, .closable],
+            contentRect: NSRect(x: 0, y: 0, width: 780, height: 800),
+            styleMask: [.titled, .closable, .resizable, .miniaturizable],
             backing: .buffered,
             defer: false
         )
@@ -270,11 +274,18 @@ final class SettingsWindowController: NSWindowController {
         window.contentView = makeContentView()
     }
 
+    private func makeSeparator() -> NSView {
+        let separator = NSBox()
+        separator.boxType = .separator
+        separator.translatesAutoresizingMaskIntoConstraints = false
+        return separator
+    }
+
     private func makeContentView() -> NSView {
         let container = NSView()
 
         let titleLabel = NSTextField(labelWithString: "Cursor Control Settings")
-        titleLabel.font = .systemFont(ofSize: 20, weight: .semibold)
+        titleLabel.font = .systemFont(ofSize: 24, weight: .bold)
 
         let detailLabel = NSTextField(
             wrappingLabelWithString: "Tune shortcuts, scrolling, and cursor-control behavior. Cursor Control is focused on keyboard cursor movement and universal scrolling."
@@ -307,19 +318,20 @@ final class SettingsWindowController: NSWindowController {
         )
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 12
+        stack.spacing = 32
+        stack.edgeInsets = NSEdgeInsets(top: 10, left: 0, bottom: 20, right: 0)
         stack.translatesAutoresizingMaskIntoConstraints = false
 
         container.addSubview(stack)
         tabView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             tabView.widthAnchor.constraint(equalTo: stack.widthAnchor),
-            tabView.heightAnchor.constraint(equalToConstant: 580),
+            tabView.heightAnchor.constraint(greaterThanOrEqualToConstant: 500),
 
-            stack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 28),
-            stack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -28),
-            stack.topAnchor.constraint(equalTo: container.topAnchor, constant: 22),
-            stack.bottomAnchor.constraint(lessThanOrEqualTo: container.bottomAnchor, constant: -18)
+            stack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 32),
+            stack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -32),
+            stack.topAnchor.constraint(equalTo: container.topAnchor, constant: 28),
+            stack.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -24)
         ])
 
         refreshShortcutButtons()
@@ -348,14 +360,36 @@ final class SettingsWindowController: NSWindowController {
     }
 
     private func paddedTabContent(_ content: NSView) -> NSView {
-        let container = NSView()
+        let flippedContent = FlippedView()
+        flippedContent.translatesAutoresizingMaskIntoConstraints = false
         content.translatesAutoresizingMaskIntoConstraints = false
-        container.addSubview(content)
+        flippedContent.addSubview(content)
         NSLayoutConstraint.activate([
-            content.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 18),
-            content.trailingAnchor.constraint(lessThanOrEqualTo: container.trailingAnchor, constant: -18),
-            content.topAnchor.constraint(equalTo: container.topAnchor, constant: 12),
-            content.bottomAnchor.constraint(lessThanOrEqualTo: container.bottomAnchor, constant: -12)
+            content.leadingAnchor.constraint(equalTo: flippedContent.leadingAnchor),
+            content.trailingAnchor.constraint(equalTo: flippedContent.trailingAnchor),
+            content.topAnchor.constraint(equalTo: flippedContent.topAnchor),
+            content.bottomAnchor.constraint(equalTo: flippedContent.bottomAnchor)
+        ])
+
+        let scrollView = NSScrollView()
+        scrollView.hasVerticalScroller = true
+        scrollView.autohidesScrollers = true
+        scrollView.drawsBackground = false
+        scrollView.documentView = flippedContent
+        
+        // Disable horizontal scrolling
+        scrollView.hasHorizontalScroller = false
+        scrollView.horizontalScrollElasticity = .none
+
+        let container = NSView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(scrollView)
+        NSLayoutConstraint.activate([
+            scrollView.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 18),
+            scrollView.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -18),
+            scrollView.topAnchor.constraint(equalTo: container.topAnchor, constant: 12),
+            scrollView.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -12),
+            flippedContent.widthAnchor.constraint(equalTo: scrollView.contentView.widthAnchor)
         ])
         return container
     }
@@ -406,10 +440,11 @@ final class SettingsWindowController: NSWindowController {
             )
         )
 
-        let stack = NSStackView(views: [sectionLabel, shortcutStack, clickDescription, clickStack])
+        let stack = NSStackView(views: [sectionLabel, shortcutStack, makeSeparator(), clickDescription, clickStack])
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 24
+        stack.spacing = 32
+        stack.edgeInsets = NSEdgeInsets(top: 10, left: 0, bottom: 20, right: 0)
         return stack
     }
 
@@ -461,7 +496,8 @@ final class SettingsWindowController: NSWindowController {
         let stack = NSStackView(views: [sectionLabel])
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 20
+        stack.spacing = 32
+        stack.edgeInsets = NSEdgeInsets(top: 10, left: 0, bottom: 20, right: 0)
 
         for row in rows {
             let control = NumericSettingControl(
@@ -518,7 +554,8 @@ final class SettingsWindowController: NSWindowController {
         let stack = NSStackView(views: [sectionLabel])
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 9
+        stack.spacing = 24
+        stack.edgeInsets = NSEdgeInsets(top: 10, left: 0, bottom: 20, right: 0)
 
         for row in rows {
             let control = NumericSettingControl(
@@ -534,6 +571,8 @@ final class SettingsWindowController: NSWindowController {
         }
 
 
+        stack.addArrangedSubview(makeSeparator())
+        
         let bindingDescription = sectionDescription(
             title: "Movement Keys",
             body: "Choose the keys Cursor Control captures while cursor control mode is active. Hold Shift to drag or draw while moving."
@@ -563,14 +602,15 @@ final class SettingsWindowController: NSWindowController {
         let stack = NSStackView(views: [sectionLabel])
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 20
+        stack.spacing = 32
+        stack.edgeInsets = NSEdgeInsets(top: 10, left: 0, bottom: 20, right: 0)
 
         stack.addArrangedSubview(makeShortcutRow(for: .autoClicker))
 
         let control = NumericSettingControl(
             minimum: AutoClickerSettings.minimumClicksPerSecond,
             maximum: AutoClickerSettings.maximumClicksPerSecond,
-            isInteger: false,
+            isInteger: true,
             suffix: "clicks/sec",
             target: self,
             action: #selector(autoClickerSettingChanged(_:))
@@ -611,7 +651,8 @@ final class SettingsWindowController: NSWindowController {
         let stack = NSStackView(views: [sectionLabel])
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 9
+        stack.spacing = 24
+        stack.edgeInsets = NSEdgeInsets(top: 10, left: 0, bottom: 20, right: 0)
 
         for row in rows {
             let control = NumericSettingControl(
@@ -664,17 +705,17 @@ final class SettingsWindowController: NSWindowController {
 
     private func sectionDescription(title: String, body: String) -> NSView {
         let titleLabel = NSTextField(labelWithString: title)
-        titleLabel.font = .systemFont(ofSize: 15, weight: .semibold)
+        titleLabel.font = .systemFont(ofSize: 18, weight: .bold)
 
         let bodyLabel = NSTextField(wrappingLabelWithString: body)
-        bodyLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        bodyLabel.font = .systemFont(ofSize: NSFont.systemFontSize)
         bodyLabel.textColor = .secondaryLabelColor
         bodyLabel.maximumNumberOfLines = 0
 
         let stack = NSStackView(views: [titleLabel, bodyLabel])
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 4
+        stack.spacing = 8
         return stack
     }
 

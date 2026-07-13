@@ -174,23 +174,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let registrationResult = shortcutCoordinator.start(
             handlers: [
-                .activateCursorMode: { [weak self] _ in
+                .activateCursorMode: { [weak self] type, _ in
+                    guard type == .keyDown else { return }
                     self?.cursorControlService?.toggle()
                 },
-                .scrollLeft: { [weak self] repeatCount in
+                .scrollLeft: { [weak self] type, repeatCount in
+                    guard type == .keyDown else { return }
                     self?.scroll(.left, repeatCount: repeatCount)
                 },
-                .scrollDown: { [weak self] repeatCount in
+                .scrollDown: { [weak self] type, repeatCount in
+                    guard type == .keyDown else { return }
                     self?.scroll(.down, repeatCount: repeatCount)
                 },
-                .scrollUp: { [weak self] repeatCount in
+                .scrollUp: { [weak self] type, repeatCount in
+                    guard type == .keyDown else { return }
                     self?.scroll(.up, repeatCount: repeatCount)
                 },
-                .scrollRight: { [weak self] repeatCount in
+                .scrollRight: { [weak self] type, repeatCount in
+                    guard type == .keyDown else { return }
                     self?.scroll(.right, repeatCount: repeatCount)
                 },
-                .autoClicker: { [weak self] _ in
-                    self?.autoClickerService?.toggle()
+                .autoClicker: { [weak self] type, _ in
+                    if type == .keyDown {
+                        self?.autoClickerService?.start()
+                    } else if type == .keyUp {
+                        self?.autoClickerService?.stop()
+                    }
                 }
             ],
             cursorMovementBindings: cursorMovementBindingStore.load(),

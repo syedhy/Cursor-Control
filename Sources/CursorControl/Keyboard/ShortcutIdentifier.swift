@@ -10,7 +10,8 @@ enum ShortcutIdentifier: String, CaseIterable, Codable, Hashable {
         .scrollLeft,
         .scrollDown,
         .scrollUp,
-        .scrollRight
+        .scrollRight,
+        .autoClicker
     ]
 
     static let carbonHandledCases: [ShortcutIdentifier] = allCases.filter {

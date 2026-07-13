@@ -13,15 +13,8 @@ final class AutoClickerService {
         self.mouseClickService = mouseClickService
     }
 
-    func toggle() {
-        if isRunning {
-            stop()
-        } else {
-            start()
-        }
-    }
-
-    private func start() {
+    func start() {
+        guard !isRunning else { return }
         isRunning = true
         task = Task {
             while !Task.isCancelled {
@@ -38,7 +31,8 @@ final class AutoClickerService {
         }
     }
 
-    private func stop() {
+    func stop() {
+        guard isRunning else { return }
         isRunning = false
         task?.cancel()
         task = nil

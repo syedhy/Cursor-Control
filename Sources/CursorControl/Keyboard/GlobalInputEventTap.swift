@@ -29,7 +29,7 @@ final class GlobalInputEventTap {
     private var runLoopSource: CFRunLoopSource?
     private var shortcuts: [ShortcutIdentifier: KeyboardShortcut] = [:]
     private var cursorMovementBindings = CursorMovementBindings()
-    private var onShortcut: (@MainActor (ShortcutIdentifier, Int) -> Void)?
+    private var onShortcut: (@MainActor (ShortcutIdentifier, CGEventType, Int) -> Void)?
     private var onCursorInput: ((CursorControlInput) -> Void)?
     private var onTapDisabled: (() -> Void)?
     private var isCursorModeActive = false
@@ -46,7 +46,7 @@ final class GlobalInputEventTap {
     func start(
         shortcuts: [ShortcutIdentifier: KeyboardShortcut],
         cursorMovementBindings: CursorMovementBindings,
-        onShortcut: @escaping @MainActor (ShortcutIdentifier, Int) -> Void,
+        onShortcut: @escaping @MainActor (ShortcutIdentifier, CGEventType, Int) -> Void,
         onCursorInput: @escaping (CursorControlInput) -> Void,
         onTapDisabled: @escaping () -> Void
     ) -> Bool {
@@ -141,16 +141,39 @@ final class GlobalInputEventTap {
             return Unmanaged.passUnretained(event)
         }
 
+        let keyCode = UInt32(event.getIntegerValueField(.keyboardEventKeycode))
+        let modifiers = ShortcutModifiers(cgEventFlags: event.flags)
+
+        // 1. Check if the currently held shortcut is released
+        if let activeId = repeatingShortcutIdentifier, let activeShortcut = shortcuts[activeId] {
+            var released = false
+            if type == .keyUp && keyCode == activeShortcut.keyCode {
+                released = true
+            } else if type == .flagsChanged && !modifiers.isSuperset(of: activeShortcut.modifiers) {
+                released = true
+            }
+
+            if released {
+                repeatingShortcutIdentifier = nil
+                shortcutRepeatCount = 0
+                onShortcut?(activeId, .keyUp, 0)
+                
+                // Consume the keyUp event if it was for the main key
+                if type == .keyUp && keyCode == activeShortcut.keyCode {
+                    return nil
+                }
+            }
+        }
+
+        // 2. flagsChanged handling
         if type == .flagsChanged {
             return handleFlagsChanged(event)
         }
 
+        // 3. keyDown / keyUp handling for everything else
         guard type == .keyDown || type == .keyUp else {
             return Unmanaged.passUnretained(event)
         }
-
-        let keyCode = UInt32(event.getIntegerValueField(.keyboardEventKeycode))
-        let modifiers = ShortcutModifiers(cgEventFlags: event.flags)
 
         if let cursorInput = cursorInput(
             keyCode: keyCode,
@@ -172,9 +195,11 @@ final class GlobalInputEventTap {
         }
 
         if type == .keyUp {
+            // Already handled in the released block, but catch-all here
             if repeatingShortcutIdentifier == identifier {
                 repeatingShortcutIdentifier = nil
                 shortcutRepeatCount = 0
+                onShortcut?(identifier, type, 0)
             }
             return nil
         }
@@ -185,7 +210,7 @@ final class GlobalInputEventTap {
             repeatingShortcutIdentifier = identifier
             shortcutRepeatCount = 0
         }
-        onShortcut?(identifier, shortcutRepeatCount)
+        onShortcut?(identifier, type, shortcutRepeatCount)
 
         return nil
     }

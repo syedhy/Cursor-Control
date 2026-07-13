@@ -16,7 +16,7 @@ final class ShortcutCoordinator {
         subsystem: AppConstants.bundleIdentifier,
         category: "ShortcutCoordinator"
     )
-    private var handlers: [ShortcutIdentifier: @MainActor (Int) -> Void] = [:]
+    private var handlers: [ShortcutIdentifier: @MainActor (CGEventType, Int) -> Void] = [:]
     private var onCursorInput: (CursorControlInput) -> Void = { _ in }
     private var onInputTapDisabled: () -> Void = {}
     private var isCursorModeActive = false
@@ -34,7 +34,7 @@ final class ShortcutCoordinator {
     }
 
     func start(
-        handlers: [ShortcutIdentifier: @MainActor (Int) -> Void],
+        handlers: [ShortcutIdentifier: @MainActor (CGEventType, Int) -> Void],
         cursorMovementBindings: CursorMovementBindings,
         onCursorInput: @escaping (CursorControlInput) -> Void,
         onInputTapDisabled: @escaping () -> Void
@@ -119,7 +119,7 @@ final class ShortcutCoordinator {
     private func applyCurrentAssignments() -> ShortcutUpdateResult {
         let assignments = store.load().all
         let result = service.registerShortcuts(assignments) { [weak self] identifier in
-            self?.handleShortcut(identifier, repeatCount: 0)
+            self?.handleShortcut(identifier, type: .keyDown, repeatCount: 0)
         }
 
         switch result {
@@ -133,8 +133,8 @@ final class ShortcutCoordinator {
         if !inputEventTap.start(
             shortcuts: assignments,
             cursorMovementBindings: cursorMovementBindings,
-            onShortcut: { [weak self] identifier, repeatCount in
-                self?.handleShortcut(identifier, repeatCount: repeatCount)
+            onShortcut: { [weak self] identifier, type, repeatCount in
+                self?.handleShortcut(identifier, type: type, repeatCount: repeatCount)
             },
             onCursorInput: { [weak self] input in
                 self?.onCursorInput(input)
@@ -153,7 +153,7 @@ final class ShortcutCoordinator {
         return .success
     }
 
-    private func handleShortcut(_ identifier: ShortcutIdentifier, repeatCount: Int) {
-        handlers[identifier]?(repeatCount)
+    private func handleShortcut(_ identifier: ShortcutIdentifier, type: CGEventType, repeatCount: Int) {
+        handlers[identifier]?(type, repeatCount)
     }
 }
