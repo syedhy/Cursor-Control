@@ -59,16 +59,22 @@ brew trust --cask syedhy/cursor-control/cursor-control
 brew install --cask syedhy/cursor-control/cursor-control
 ```
 
+If you have already installed Cursor Control via Homebrew and want to update to the latest version, simply run:
+```bash
+brew upgrade cursor-control
+```
+
 The cask installs the same GitHub Release ZIP and verifies it with the checksum
 stored in the cask.
 
 ## What It Does
 
 - Move the cursor with **H/J/K/L**
-- Scroll with **Control-H/J/K/L**
-- Left-click, double-click, right-click, and Shift-drag from the keyboard
-- Configure global shortcuts, movement keys, scroll behavior, and cursor speed
-- Run quietly from the menu bar with onboarding and settings windows
+- Scroll smoothly anywhere on screen with **Control-H/J/K/L**
+- Left-click, double-click, right-click, and **Shift-drag (click and drag)** from the keyboard
+- **Auto-Clicker**: Hold a shortcut to fire continuous clicks, and release to stop instantly
+- Configure global shortcuts, movement keys, scroll behavior, auto-click speed, and cursor speed
+- Run quietly from the menu bar with onboarding and a comprehensive settings window
 
 ## Requirements
 
