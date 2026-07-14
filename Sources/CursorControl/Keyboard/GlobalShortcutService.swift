@@ -19,10 +19,11 @@ private func globalShortcutEventHandler(
     let service = Unmanaged<GlobalShortcutService>
         .fromOpaque(context)
         .takeUnretainedValue()
-    Task { @MainActor [weak service] in
-        service?.handleHotKey(id: hotKeyID.id)
+
+    return MainActor.assumeIsolated {
+        service.handleHotKey(id: hotKeyID.id)
+        return noErr
     }
-    return noErr
 }
 
 private func hotKeyID(from event: EventRef) -> EventHotKeyID? {
