@@ -8,6 +8,7 @@ final class MenuBarController: NSObject {
     private let onOpenSettings: () -> Void
     private let onQuit: () -> Void
     private var cursorModeItem: NSMenuItem?
+    private var isJigglerActive: Bool = false
 
     init(
         cursorModeShortcut: KeyboardShortcut,
@@ -31,7 +32,7 @@ final class MenuBarController: NSObject {
     private func configureStatusItem() {
         guard let button = statusItem.button else { return }
 
-        button.image = Self.statusImage(isCursorModeActive: false)
+        button.image = Self.statusImage(isCursorModeActive: false, isJigglerActive: false)
         button.toolTip = AppConstants.appName
     }
 
@@ -45,13 +46,28 @@ final class MenuBarController: NSObject {
         cursorModeItem?.title = isActive ? "Exit Cursor Control Mode" : "Cursor Control Mode"
         guard let button = statusItem.button else { return }
 
-        button.image = Self.statusImage(isCursorModeActive: isActive)
+        button.image = Self.statusImage(isCursorModeActive: isActive, isJigglerActive: isJigglerActive)
         button.toolTip = isActive
             ? "Cursor Control mode active"
             : AppConstants.appName
     }
 
-    private static func statusImage(isCursorModeActive: Bool) -> NSImage? {
+    func setJigglerActive(_ isActive: Bool) {
+        isJigglerActive = isActive
+        guard let button = statusItem.button else { return }
+
+        button.image = Self.statusImage(isCursorModeActive: cursorModeItem?.state == .on, isJigglerActive: isActive)
+    }
+
+    private static func statusImage(isCursorModeActive: Bool, isJigglerActive: Bool) -> NSImage? {
+        if isJigglerActive {
+            let image = NSImage(
+                systemSymbolName: "cup.and.saucer.fill",
+                accessibilityDescription: "Keep Awake active"
+            )
+            image?.isTemplate = true
+            return image
+        }
         if isCursorModeActive {
             let image = NSImage(
                 systemSymbolName: "cursorarrow.motionlines",

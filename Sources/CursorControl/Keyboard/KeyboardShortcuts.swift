@@ -50,6 +50,12 @@ enum KeyboardShortcuts {
             modifiers: [.option],
             keyEquivalent: "m",
             displayKey: "M"
+        ),
+        .mouseJiggler: KeyboardShortcut(
+            keyCode: 38,
+            modifiers: [.option],
+            keyEquivalent: "j",
+            displayKey: "J"
         )
     ]
 

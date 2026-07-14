@@ -6,6 +6,7 @@ enum ShortcutIdentifier: String, CaseIterable, Codable, Hashable {
     case scrollRight
     case autoClicker
     case middleClick
+    case mouseJiggler
 
     static let eventTapHandledCases: [ShortcutIdentifier] = [
         .scrollLeft,
@@ -35,6 +36,8 @@ enum ShortcutIdentifier: String, CaseIterable, Codable, Hashable {
             return 6
         case .middleClick:
             return 7
+        case .mouseJiggler:
+            return 8
         }
     }
 
@@ -52,8 +55,8 @@ enum ShortcutIdentifier: String, CaseIterable, Codable, Hashable {
             return "Scroll right"
         case .autoClicker:
             return "Auto clicker"
-        case .middleClick:
-            return "Middle click"
+        case .middleClick: return "Middle-Click"
+        case .mouseJiggler: return "Keep Awake (Mouse Jiggler)"
         }
     }
 
@@ -73,6 +76,8 @@ enum ShortcutIdentifier: String, CaseIterable, Codable, Hashable {
             return "Toggle the auto-clicker on or off."
         case .middleClick:
             return "Simulates a middle-click at the current cursor position."
+        case .mouseJiggler:
+            return "Keeps your Mac awake by slightly nudging the cursor when you're inactive."
         }
     }
 }

@@ -73,6 +73,7 @@ stored in the cask.
 - Scroll smoothly anywhere on screen with **Control-H/J/K/L**
 - Left-click, double-click, right-click, and **Shift-drag (click and drag)** from the keyboard
 - **Middle-click**: Global shortcut to instantly middle-click at your current cursor position (great for opening links in new tabs)
+- **Mouse Jiggler (Keep Awake)**: Prevent your Mac from falling asleep during long tasks. Toggle it on and it will gently nudge your cursor every 30 seconds if you're completely inactive.
 - **Auto-Clicker**: Hold a shortcut to fire continuous clicks, and release to stop instantly
 - Configure global shortcuts, movement keys, scroll behavior, auto-click speed, and cursor speed
 - Run quietly from the menu bar with onboarding and a comprehensive settings window

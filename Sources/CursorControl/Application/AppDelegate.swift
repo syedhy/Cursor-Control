@@ -13,6 +13,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var autoClickerSettingsStore: AutoClickerSettingsStore?
     private var mouseClickService: MouseClickService?
     private var autoClickerService: AutoClickerService?
+    private var jigglerService: JigglerService?
     private var cursorModeIndicatorController: CursorModeIndicatorController?
     private var settingsWindowController: SettingsWindowController?
     private var shortcutCoordinator: ShortcutCoordinator?
@@ -39,6 +40,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             mouseClickService: mouseClickService
         )
         self.autoClickerService = autoClickerService
+        let jigglerService = JigglerService()
+        self.jigglerService = jigglerService
         let cursorControlService = CursorControlService(
             settingsProvider: { cursorSettingsStore.load() }
         )
@@ -68,6 +71,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             onQuit: { NSApp.terminate(nil) }
         )
         self.menuBarController = menuBarController
+
+        jigglerService.onActiveStateChanged = { [weak self] isActive in
+            self?.menuBarController?.setJigglerActive(isActive)
+        }
 
         cursorControlService.onActiveStateChanged = {
             [weak menuBarController, weak shortcutCoordinator, weak cursorModeIndicatorController] isActive in
@@ -209,6 +216,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     if let location = CGEvent(source: nil)?.location {
                         _ = self?.mouseClickService?.click(.middle, at: location)
                     }
+                },
+                .mouseJiggler: { [weak self] type, _ in
+                    guard type == .keyDown else { return }
+                    self?.jigglerService?.toggle()
                 }
             ],
             cursorMovementBindings: cursorMovementBindingStore.load(),
