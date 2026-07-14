@@ -72,6 +72,7 @@ stored in the cask.
 - Move the cursor with **H/J/K/L**
 - Scroll smoothly anywhere on screen with **Control-H/J/K/L**
 - Left-click, double-click, right-click, and **Shift-drag (click and drag)** from the keyboard
+- **Middle-click**: Global shortcut to instantly middle-click at your current cursor position (great for opening links in new tabs)
 - **Auto-Clicker**: Hold a shortcut to fire continuous clicks, and release to stop instantly
 - Configure global shortcuts, movement keys, scroll behavior, auto-click speed, and cursor speed
 - Run quietly from the menu bar with onboarding and a comprehensive settings window

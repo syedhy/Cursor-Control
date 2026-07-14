@@ -279,7 +279,7 @@ final class CursorControlService {
         switch kind {
         case .left:
             lastLeftClick = (dateProvider(), point)
-        case .doubleLeft, .right:
+        case .doubleLeft, .right, .middle:
             lastLeftClick = nil
         }
     }

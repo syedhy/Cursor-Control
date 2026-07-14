@@ -44,6 +44,12 @@ enum KeyboardShortcuts {
             modifiers: [.option, .shift],
             keyEquivalent: "x",
             displayKey: "X"
+        ),
+        .middleClick: KeyboardShortcut(
+            keyCode: 46,
+            modifiers: [.option],
+            keyEquivalent: "m",
+            displayKey: "M"
         )
     ]
 

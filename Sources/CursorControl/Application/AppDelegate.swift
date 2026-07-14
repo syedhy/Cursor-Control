@@ -11,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var cursorSettingsStore: CursorSettingsStore?
     private var cursorMovementBindingStore: CursorMovementBindingStore?
     private var autoClickerSettingsStore: AutoClickerSettingsStore?
+    private var mouseClickService: MouseClickService?
     private var autoClickerService: AutoClickerService?
     private var cursorModeIndicatorController: CursorModeIndicatorController?
     private var settingsWindowController: SettingsWindowController?
@@ -31,9 +32,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.cursorMovementBindingStore = cursorMovementBindingStore
         let autoClickerSettingsStore = AutoClickerSettingsStore()
         self.autoClickerSettingsStore = autoClickerSettingsStore
+        let mouseClickService = MouseClickService()
+        self.mouseClickService = mouseClickService
         let autoClickerService = AutoClickerService(
             settingsProvider: { autoClickerSettingsStore.load() },
-            mouseClickService: MouseClickService()
+            mouseClickService: mouseClickService
         )
         self.autoClickerService = autoClickerService
         let cursorControlService = CursorControlService(
@@ -199,6 +202,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                         self?.autoClickerService?.start()
                     } else if type == .keyUp {
                         self?.autoClickerService?.stop()
+                    }
+                },
+                .middleClick: { [weak self] type, _ in
+                    guard type == .keyDown else { return }
+                    if let location = CGEvent(source: nil)?.location {
+                        _ = self?.mouseClickService?.click(.middle, at: location)
                     }
                 }
             ],

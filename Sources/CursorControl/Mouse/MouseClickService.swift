@@ -5,6 +5,7 @@ enum MouseClickKind: Equatable {
     case left
     case doubleLeft
     case right
+    case middle
 }
 
 protocol MouseClicking {
@@ -50,6 +51,11 @@ struct MouseClickService {
             mouseButton = .right
             downType = .rightMouseDown
             upType = .rightMouseUp
+            clickState = 1
+        case .middle:
+            mouseButton = .center
+            downType = .otherMouseDown
+            upType = .otherMouseUp
             clickState = 1
         }
 
