@@ -9,6 +9,7 @@ enum ShortcutUpdateResult: Equatable {
 
 @MainActor
 final class ShortcutCoordinator {
+    private let modeOptionsStore = CursorModeOptionsStore()
     private let store: ShortcutStore
     private let service: GlobalShortcutService
     private let inputEventTap: GlobalInputEventTap
@@ -50,13 +51,22 @@ final class ShortcutCoordinator {
         store.shortcut(for: identifier)
     }
 
+    var modeOptions: CursorModeOptions { modeOptionsStore.load() }
+
+    func updateModeOptions(_ options: CursorModeOptions) {
+        modeOptionsStore.save(options)
+        inputEventTap.setModeOptions(options)
+    }
+
+    var currentShortcuts: [ShortcutIdentifier: KeyboardShortcut] { store.load().all }
+
     func updateShortcut(
         _ identifier: ShortcutIdentifier,
         to shortcut: KeyboardShortcut
     ) -> ShortcutUpdateResult {
         let previousAssignments = store.load()
 
-        switch store.update(identifier, to: shortcut) {
+        switch store.update(identifier, to: shortcut, movementBindings: cursorMovementBindings) {
         case .success:
             let result = applyCurrentAssignments()
             if case .success = result {
@@ -145,6 +155,7 @@ final class ShortcutCoordinator {
         ) {
             logger.error("Global input event tap was unavailable; scroll shortcuts may not work until Accessibility permission is granted.")
         }
+        inputEventTap.setModeOptions(modeOptionsStore.load())
         inputEventTap.setCursorModeActive(
             isCursorModeActive,
             captureMode: cursorCaptureMode

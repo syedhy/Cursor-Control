@@ -41,6 +41,20 @@ struct KeyboardShortcut: Codable, Equatable, Hashable {
         )
     }
 
+    static func optionTap(keyCode: UInt32) -> KeyboardShortcut? {
+        guard keyCode == 58 || keyCode == 61 else { return nil }
+        return KeyboardShortcut(
+            keyCode: keyCode,
+            modifiers: [],
+            keyEquivalent: "",
+            displayKey: keyCode == 58 ? "Left Option tap" : "Right Option tap"
+        )
+    }
+
+    var isOptionTap: Bool {
+        Self.optionTap(keyCode: keyCode) != nil && modifiers.isEmpty
+    }
+
     var displayName: String {
         let prefix = modifiers.displayPrefix
         return prefix.isEmpty ? displayKey : "\(prefix)-\(displayKey)"
@@ -73,6 +87,10 @@ struct KeyboardShortcut: Codable, Equatable, Hashable {
 
     private static func displayKey(keyCode: UInt16, keyEquivalent: String) -> String {
         switch keyCode {
+        case 123: return "Left Arrow"
+        case 124: return "Right Arrow"
+        case 125: return "Down Arrow"
+        case 126: return "Up Arrow"
         case 49:
             return "Space"
         case KeyboardShortcuts.escapeKeyCode:

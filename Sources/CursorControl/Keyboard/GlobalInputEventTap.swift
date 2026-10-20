@@ -37,6 +37,9 @@ final class GlobalInputEventTap {
     private var cursorCaptureMode: CursorControlCaptureMode = .movement
     private var repeatingShortcutIdentifier: ShortcutIdentifier?
     private var shortcutRepeatCount = 0
+    private var optionTapTracker = OptionTapTracker()
+    private var modeOptions = CursorModeOptions()
+    private var heldExitKey: UInt32?
     private let logger = Logger(
         subsystem: AppConstants.bundleIdentifier,
         category: "GlobalInputEventTap"
@@ -61,6 +64,13 @@ final class GlobalInputEventTap {
             (1 << CGEventType.keyDown.rawValue)
             | (1 << CGEventType.keyUp.rawValue)
             | (1 << CGEventType.flagsChanged.rawValue)
+            | (1 << CGEventType.leftMouseDown.rawValue)
+            | (1 << CGEventType.rightMouseDown.rawValue)
+            | (1 << CGEventType.otherMouseDown.rawValue)
+            | (1 << CGEventType.leftMouseUp.rawValue)
+            | (1 << CGEventType.rightMouseUp.rawValue)
+            | (1 << CGEventType.otherMouseUp.rawValue)
+            | (1 << CGEventType.scrollWheel.rawValue)
         let context = Unmanaged.passUnretained(self).toOpaque()
         guard let eventTap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
@@ -108,7 +118,11 @@ final class GlobalInputEventTap {
         cursorCaptureMode = .movement
         repeatingShortcutIdentifier = nil
         shortcutRepeatCount = 0
+        optionTapTracker.reset()
+        heldExitKey = nil
     }
+
+    func setModeOptions(_ options: CursorModeOptions) { modeOptions = options }
 
     func setCursorModeActive(
         _ isActive: Bool,
@@ -134,6 +148,8 @@ final class GlobalInputEventTap {
         event: CGEvent
     ) -> Unmanaged<CGEvent>? {
         if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+            optionTapTracker.reset()
+            heldExitKey = nil
             onTapDisabled?()
             if let eventTap {
                 CGEvent.tapEnable(tap: eventTap, enable: true)
@@ -143,6 +159,15 @@ final class GlobalInputEventTap {
 
         let keyCode = UInt32(event.getIntegerValueField(.keyboardEventKeycode))
         let modifiers = ShortcutModifiers(cgEventFlags: event.flags)
+
+        if let tap = optionTapTracker.handle(
+            type: type,
+            keyCode: keyCode,
+            flags: event.flags,
+            timestamp: Double(event.timestamp) / 1_000_000_000
+        ), shortcuts[.activateCursorMode] == tap {
+            onShortcut?(.activateCursorMode, .keyDown, 0)
+        }
 
         // 1. Check if the currently held shortcut is released
         if let activeId = repeatingShortcutIdentifier, let activeShortcut = shortcuts[activeId] {
@@ -175,6 +200,21 @@ final class GlobalInputEventTap {
             return Unmanaged.passUnretained(event)
         }
 
+        if heldExitKey == keyCode {
+            if type == .keyUp { heldExitKey = nil }
+            return nil
+        }
+        if Self.shortcutIdentifier(
+            for: keyCode, modifiers: modifiers, shortcuts: shortcuts,
+            isCursorModeActive: isCursorModeActive, options: modeOptions
+        ) == .exitCursorMode {
+            if type == .keyDown {
+                heldExitKey = keyCode
+                onShortcut?(.exitCursorMode, .keyDown, 0)
+            }
+            return nil
+        }
+
         if let cursorInput = cursorInput(
             keyCode: keyCode,
             modifiers: modifiers,
@@ -189,7 +229,8 @@ final class GlobalInputEventTap {
         guard let identifier = Self.shortcutIdentifier(
             for: keyCode,
             modifiers: modifiers,
-            shortcuts: shortcuts
+            shortcuts: shortcuts,
+            isCursorModeActive: isCursorModeActive, options: modeOptions
         ) else {
             return Unmanaged.passUnretained(event)
         }
@@ -277,10 +318,14 @@ final class GlobalInputEventTap {
     static func shortcutIdentifier(
         for keyCode: UInt32,
         modifiers: ShortcutModifiers,
-        shortcuts: [ShortcutIdentifier: KeyboardShortcut]
+        shortcuts: [ShortcutIdentifier: KeyboardShortcut],
+        isCursorModeActive: Bool = false,
+        options: CursorModeOptions = CursorModeOptions()
     ) -> ShortcutIdentifier? {
         for identifier in ShortcutIdentifier.eventTapHandledCases {
+            if identifier == .exitCursorMode && !options.separateExitEnabled { continue }
             guard let shortcut = shortcuts[identifier],
+                  !identifier.requiresCursorMode(for: shortcut) || isCursorModeActive,
                   shortcut.keyCode == keyCode,
                   shortcut.modifiers == modifiers else {
                 continue
